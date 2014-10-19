@@ -83,7 +83,7 @@ void welcome(char *str)
 
 
 void goodbye(char *str) {void exit(); printf(str); 
-	exit(1); 
+	/*exit(1); */
 }
 
 
@@ -159,6 +159,18 @@ int update_passwd(char *user_name, char *passwd)
 }
 
 
+int create_database()
+{
+	FILE *database;
+	database = fopen("./database.txt", "w");
+	if(!database)
+		return -1;
+	fclose(database);
+	return SUCCESS;
+}
+
+
+
 
 int main(int argc, char *argv[])
 {
@@ -169,6 +181,9 @@ int main(int argc, char *argv[])
 	char *evil = "Invalid identity, exiting!\n";
 	
 	u_char send_mtype;
+
+	// make sure the database file exists
+	/*create_database();*/
 
 	//-------------------------------------------------------------
 
@@ -289,7 +304,7 @@ while(1)
 				send_mtype = 200; //telling the user he is good.
 				}
 				else
-				{.
+				{
 				goodbye(evil);
 				send_mtype = 204; // telling the user is out.
 				}
@@ -298,6 +313,7 @@ while(1)
 			break;
 		case 101:
 			update_passwd(curr_user, read_packet->payload);
+			printf("%s\n", curr_user);
 			send_mtype = 200;
 			
 			break;
@@ -356,7 +372,7 @@ while(1)
 	*/
 	
 	// SEND DATA BACK TO CLIENT
-	if( send( ssock, packet, sizeof(struct app_packet), 0) < 0) { /* echo the client message back to the client */
+	if( send( csock, packet, sizeof(struct app_packet), 0) < 0) { /* echo the client message back to the client */
 		fprintf(stderr, "send() failed to send data back to client.\n");
 		exit(8);
 	}
