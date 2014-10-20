@@ -266,9 +266,6 @@ int main(int argc, char *argv[])
 		exit(5);
 	}
 
-while(1)
-{
-	
 	// RECEIVING STUFF
 	namelen = sizeof(cliaddr); /* accept connection request */
 
@@ -276,6 +273,11 @@ while(1)
 		fprintf(stderr, "accept() failed to accept client connection request.\n");
 		exit(6);
 	}
+
+
+while(1)
+{
+	
 
 	printf("hey!!\n");
 

@@ -186,15 +186,14 @@ int main(int argc, char *argv[])
 	}
 
 
+char raw_packet[BUFLEN];
+	struct app_packet *packet = (struct app_packet *)raw_packet;
+	int issent;
+struct app_packet *read_packet;
 
 
 while(1)
 {
-
-
-
-	char raw_packet[BUFLEN];
-	struct app_packet *packet = (struct app_packet *)raw_packet;
 	memset(raw_packet, 0, BUFLEN);
 	packet->control_seq = send_mtype;
 
@@ -235,9 +234,11 @@ while(1)
 	/*sprintf(packet->payload, "%s:%s", argv[2], argv[3]);*/
 	/*strcpy(packet->payload, "Hey!");
 	*/
-	int issent;
+	
 
 	issent = send(ssock, packet, sizeof(struct app_packet), 0);
+
+
 	printf("%d\n", issent);
 	printf("message sent!\n");
 
@@ -249,7 +250,7 @@ while(1)
 	}
 
 	// PROCESS DATA_BUF and decide what to do in next message
-	struct app_packet *read_packet;
+	
 	read_packet = (struct app_packet *)data_buf;
 
 	printf("%d\n", read_packet->control_seq);
@@ -299,6 +300,7 @@ switch(read_packet->control_seq)
 
 			printf("stuff happened\n");
 	}
+
 
 
 
