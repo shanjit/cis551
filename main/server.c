@@ -271,10 +271,13 @@ while(1)
 	
 	// RECEIVING STUFF
 	namelen = sizeof(cliaddr); /* accept connection request */
+
 	if( (csock = accept(ssock, (struct sockaddr *) &cliaddr, &namelen)) == -1) {
 		fprintf(stderr, "accept() failed to accept client connection request.\n");
 		exit(6);
 	}
+
+	printf("hey!!\n");
 
 
 	// PUT RECEIVED DATA INTO data_buf
@@ -282,11 +285,12 @@ while(1)
 		fprintf(stderr, "recv() did not get client data\n");
 		exit(7);
 	}
-
-
+	
 	// PROCESS DATA_BUF and decide what to do in next message
 	struct app_packet *read_packet;
 	read_packet = (struct app_packet *)data_buf;
+	
+	printf("%s\n", read_packet);
 
 	printf("%d\n", read_packet->control_seq);
 
@@ -377,6 +381,8 @@ while(1)
 		exit(8);
 	}
 	printf("message sent!\n");
+
+
 
 } 
 

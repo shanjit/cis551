@@ -208,7 +208,8 @@ while(1)
 		char new_pass[PASSLEN];
 		printf("Enter new password: ");
 		scanf("%s", new_pass);
-		strcpy(packet->payload, new_pass);
+		sprintf(packet->payload, "%s", new_pass);
+		/*strcpy(packet->payload, new_pass);*/
 	}
 
 	else if(send_mtype==102)
@@ -231,14 +232,13 @@ while(1)
 
 	/*if send_mtype==something*/
 	//make a payload with ssprintf
-	sprintf(packet->payload, "%s:%s", argv[2], argv[3]);
+	/*sprintf(packet->payload, "%s:%s", argv[2], argv[3]);*/
 	/*strcpy(packet->payload, "Hey!");
 	*/
+	int issent;
 
-
-
-
-	send(ssock, packet, sizeof(struct app_packet), 0);
+	issent = send(ssock, packet, sizeof(struct app_packet), 0);
+	printf("%d\n", issent);
 	printf("message sent!\n");
 
 
