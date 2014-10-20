@@ -189,10 +189,55 @@ int main(int argc, char *argv[])
 /*
 	/*Find the default address used for communication, this address needs to be used by the client*/
 		// --- find out default IP used for communication ---- //
+	const char* google_dns_server = "8.8.8.8";
+    int dns_port = 53;
+
+    /*define sockkaddr: structure used to specify local and remote endpoint addresses */
+
+    struct sockaddr_in serv; 
+    /*open a socket*/
+    int sock = socket (AF_INET, SOCK_STREAM, 0); /*SOCK_STREAM is for TCP and SOCK_DGRAM is for UDP*/
+    if(sock < 0)
+    {
+        perror("Socket error");
+    }
+
+	/*Start filling the sockaddr structures*/
+    memset(&serv, 0, sizeof(serv));
+    serv.sin_family = AF_INET; /*refers to the address family, use AF_INET6 for ipv6*/
+    serv.sin_addr.s_addr = inet_addr(google_dns_server); /*ip address*/
+    serv.sin_port = htons(dns_port); port number
+
+    /* No binding here because the port would already be in use*/
+
+    serv.sin_addr.s_addr = inet_addr(google_dns_server); /*ip address*/
+    serv.sin_port = htons(dns_port); /*port number*/
+
+    if(connect(sock , (const struct sockaddr*) &serv , sizeof(serv)) < 0)
+    {
+    	perror("Connect Error");
+    	close(sock);
+    	return -1;
+    }
+
+    struct sockaddr_in servname;
+    socklen_t namelen = sizeof(servname);
+    /*getsockname stores the address that is bound to a specified socket sock in the buffer pointed to by name*/
+    int err = getsockname(sock, (struct sockaddr*) &servname, &namelen); 
+    char buffer[100];
+    const char* p = inet_ntop(AF_INET, &servname.sin_addr, buffer, 100);
+    if(p == NULL)
+    {
+        //Some error
+        printf("Error Occured.");
+    }
+    close(sock);
 
     //---------------------------------------------------------------
 
-	char buffer[20] = "192.168.1.1";
+    /*this is the address on which the client needs to connect*/
+    printf("%s\n", buffer);
+
     struct sockaddr_in servaddr, cliaddr;
     socklen_t len = sizeof(servaddr);
 	char servip[20];
@@ -204,53 +249,37 @@ int main(int argc, char *argv[])
 	// --- clear out memory and assign IP parameters --- //
 	memset((char *) &servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = inet_addr(buffer);
+	servaddr.sin_addr.s_addr = inet_addr("192.168.1.1");
 	servaddr.sin_port = htons(10551);
-
-	inet_ntop(AF_INET, &servaddr.sin_addr, servip, 20);
-	printf("Starting server on: %s %d. \n", servip, ntohs(servaddr.sin_port));
-	fflush(stdout);
 
 	// --- bind socket --- //
 	if (bind(ssock, (struct sockaddr *) &servaddr, sizeof(servaddr)))
 	{
 		perror("Error Binding");
-
-
 	}
-
 	
 	len = sizeof(servaddr);
-	int err = getsockname(ssock, (struct sockaddr *) &servaddr, &len);
-
-
+	err = getsockname(ssock, (struct sockaddr *) &servaddr, &len);
 	
 	if( listen(ssock, 1) != 0 ) { /* listen for a connection */
 		fprintf(stderr, "listen() failed\n");
 		exit(5);
 	}
 
-
-
 	// RECEIVING STUFF
-	int namelen = sizeof(cliaddr); /* accept connection request */
-
-	char cliip[20];
-
+	namelen = sizeof(cliaddr); /* accept connection request */
 
 	if( (csock = accept(ssock, (struct sockaddr *) &cliaddr, &namelen)) == -1) {
 		fprintf(stderr, "accept() failed to accept client connection request.\n");
 		exit(6);
 	}
 
-	inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, 20);
-	printf("Receiving message from: %s %d.", cliip, ntohs(cliaddr.sin_port));
-	fflush(stdout);
-
 
 while(1)
 {
+	
 
+	printf("hey!!\n");
 
 
 	// PUT RECEIVED DATA INTO data_buf

@@ -73,78 +73,11 @@ int main(int argc, char *argv[])
 		strncpy(servip, argv[1], 16);
 		strncpy(username, argv[2], NAMELEN);
 		strncpy(password, argv[3], PASSLEN);
-		printf("Connecting to:%s with username:%s and pass:%s \n", ip, username, password);
+		printf("Connecting to:%s with username:%s and pass:%s \n", servip, username, password);
 	}
 
 
-	// --------------------------------------------------------------
-
-	/*Find the default address used for communication, this address needs to be used by the client*/
-		// --- find out default IP used for communication ---- //
-	const char* google_dns_server = "8.8.8.8";
-    int dns_port = 53;
-
-    /*define sockkaddr: structure used to specify local and remote endpoint addresses
-	struct sockaddr_in{
-	  short sin_family;
-	  unsigned short sin_port;
-	  IN_ADDR sin_addr;
-	  char sin_zero[8];
-	};
-	*/
-
-    struct sockaddr_in serv; 
-    /*open a socket*/
-    int sock = socket (AF_INET, SOCK_STREAM, 0); /*SOCK_STREAM is for TCP and SOCK_DGRAM is for UDP*/
-    if(sock < 0)
-    {
-        perror("Socket error");
-    }
-
-	/*Start filling the sockaddr structures*/
-    memset(&serv, 0, sizeof(serv));
-    serv.sin_family = AF_INET; /*refers to the address family, use AF_INET6 for ipv6*/
-    serv.sin_addr.s_addr = inet_addr(google_dns_server); /*ip address*/
-    serv.sin_port = htons(dns_port); /*port number*/
-
-    /* No binding here because the port would already be in use*/
-    // if (bind(sock, (struct sockaddr*) &serv, sizeof(serv)) < 0)
-    // {
-    // 	idealy should also handle ADDR_IN_USE error
-    // 	perror("Bind Error");
-    // 	close(sock);
-    // 	return -1;
-    // }
-
-    serv.sin_addr.s_addr = inet_addr(google_dns_server); /*ip address*/
-    serv.sin_port = htons(dns_port); /*port number*/
-
-    if(connect(sock , (const struct sockaddr*) &serv , sizeof(serv)) < 0)
-    {
-    	perror("Connect Error");
-    	close(sock);
-    	return -1;
-    }
-
-    struct sockaddr_in name;
-    socklen_t namelen = sizeof(name);
-    /*getsockname stores the address that is bound to a specified socket sock in the buffer pointed to by name*/
-    int err = getsockname(sock, (struct sockaddr*) &name, &namelen); 
-    char buffer[100];
-    const char* p = inet_ntop(AF_INET, &name.sin_addr, buffer, 100);
-    if(p == NULL)
-    {
-        //Some error
-        printf("Error Occured.");
-    }
-    close(sock);
-
-    //---------------------------------------------------------------
-
-
-	char cliip[20];
-	struct sockaddr_in cliaddr, servaddr;
-	socklen_t len = sizeof(cliaddr);
+	struct sockaddr_in servaddr;
 
 
 	// --- server information --- //
@@ -153,31 +86,13 @@ int main(int argc, char *argv[])
 	memset((char *) &servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	inet_pton(AF_INET, servip, &servaddr.sin_addr);		
+	servaddr.sin_addr.s_addr = inet_addr(argv[1]);
 	servaddr.sin_port = htons(atoi("10551"));
 
 	// --- client initialization --- //
 	ssock = socket(AF_INET, SOCK_STREAM, 0);
 
-	// --- clear out memory and assign IP parameters --- //
-	memset((char *) &cliaddr, 0, sizeof(cliaddr));
-	cliaddr.sin_family = AF_INET;
-	cliaddr.sin_addr.s_addr = inet_addr(buffer);
-	cliaddr.sin_port = htons(INADDR_ANY);
-
-	// --- bind socket --- //
-	bind(ssock, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
-	err = getsockname(sock, (struct sockaddr *) &cliaddr, &len);
-	
-	// --- print out initialization status --- //
-	inet_ntop(AF_INET, &servaddr.sin_addr, servip, 20);
-	inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, 20);
-
-	printf("Sending message to: %s %d. listening on %s %d\n", servip, ntohs(servaddr.sin_port), cliip, ntohs(cliaddr.sin_port));
-
-
 	send_mtype = 100;
-
-
 
 	if (connect(ssock, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
 		perror("connect failed");
@@ -185,11 +100,15 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	
+	inet_ntop(AF_INET, &servaddr.sin_addr, servip, 20);
+	printf("Connecting to : %s %d.", servip, ntohs(servaddr.sin_port));
+	fflush(stdout);
 
-char raw_packet[BUFLEN];
+	char raw_packet[BUFLEN];
 	struct app_packet *packet = (struct app_packet *)raw_packet;
 	int issent;
-struct app_packet *read_packet;
+	struct app_packet *read_packet;
 
 
 while(1)
