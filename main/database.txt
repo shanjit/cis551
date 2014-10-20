@@ -1,3 +1,5 @@
+avinash	shan
 nachiket	shan
-shan	nachiket
+shan	shan
 ameya	moore
+shanjit	shanjitsingh

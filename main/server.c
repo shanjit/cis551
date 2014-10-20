@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------------------------
 
-	char buffer[20] = "192.168.1.1";
+	char buffer[20] = "158.130.168.107";
     struct sockaddr_in servaddr, cliaddr;
     socklen_t len = sizeof(servaddr);
 	char servip[20];
@@ -271,9 +271,9 @@ while(1)
 	{
 		case 100:
 				sscanf(read_packet->payload, "%16[^:]:%s", name,pw);
-				printf("%s\n", name);
+			/*	printf("%s\n", name);
 				printf("%s\n", pw);
-			
+			*/
 				if( match(name,pw) == 0 )
 				{
 				welcome(good);
@@ -290,16 +290,16 @@ while(1)
 			break;
 		case 101:
 			update_passwd(curr_user, read_packet->payload);
-			printf("%s\n", curr_user);
-			send_mtype = 200;
+			/*printf("%s\n", curr_user);*/
+			send_mtype = 201;
 			
 			break;
 		case 102:
 			sscanf(read_packet->payload, "%16[^:]:%s", name,pw);
-			printf("%s\n", name);
-			printf("%s\n", pw);
+/*			printf("%s\n", name);
+			printf("%s\n", pw);*/
 			add_user(name, pw);
-			send_mtype = 200;
+			send_mtype = 202;
 			break;
 
 

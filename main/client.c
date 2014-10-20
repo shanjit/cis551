@@ -43,13 +43,12 @@ struct app_packet
 
 int show_menu()
 {
-	printf("\n\n\n");
 	int option;
 	printf("Choose among the following options:\n");
 	printf("1. Update your password:\n");
 	printf("2. Add new User:\n");
 	printf("3. Execute Command on drone:\n");
-	printf("\n\n");
+	
 	printf("Please Enter Option: ");
 	scanf("%d", &option);
 	return option;
@@ -78,11 +77,10 @@ int main(int argc, char *argv[])
 
 
 	struct sockaddr_in servaddr;
-
-
 	// --- server information --- //
 	// --- clear out memory and assign IP parameters --- //
 	/* Who to talk to */
+
 	memset((char *) &servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	inet_pton(AF_INET, servip, &servaddr.sin_addr);		
@@ -102,7 +100,7 @@ int main(int argc, char *argv[])
 
 	
 	inet_ntop(AF_INET, &servaddr.sin_addr, servip, 20);
-	printf("Connecting to : %s %d.", servip, ntohs(servaddr.sin_port));
+	/*printf("Connecting to : %s %d.", servip, ntohs(servaddr.sin_port));*/
 	fflush(stdout);
 
 	char raw_packet[BUFLEN];
@@ -146,6 +144,10 @@ while(1)
 	else if(send_mtype = 103)
 	{
 		// control the drone
+
+
+
+
 	}
 
 	/*if send_mtype==something*/
@@ -157,10 +159,10 @@ while(1)
 
 	issent = send(ssock, packet, sizeof(struct app_packet), 0);
 
-
+/*
 	printf("%d\n", issent);
 	printf("message sent!\n");
-
+*/
 
 	// PUT RECEIVED DATA INTO data_buf
 	if( recv(ssock, data_buf, sizeof(data_buf), 0) == -1 ) { /* wait for a client message to arrive */
@@ -172,11 +174,11 @@ while(1)
 	
 	read_packet = (struct app_packet *)data_buf;
 
-	printf("%d\n", read_packet->control_seq);
-
+/*	printf("%d\n", read_packet->control_seq);
+*/
 
 switch(read_packet->control_seq)
-	{
+	{	
 		case 200:
 		{
 			int option = show_menu();
@@ -184,9 +186,9 @@ switch(read_packet->control_seq)
 			if (option==1)
 			{	// Change password in next message
 				send_mtype = 101;
-
+/*
 				printf("%d\n",ssock);
-	
+	*/
 			}
 			else if(option==2)
 			{
@@ -209,6 +211,75 @@ switch(read_packet->control_seq)
 
 			break;
 		}
+
+		case 201:
+		{
+			printf("Password Updated. \n");
+			int option = show_menu();
+
+			if (option==1)
+			{	// Change password in next message
+				send_mtype = 101;
+/*
+				printf("%d\n",ssock);
+	*/
+			}
+			else if(option==2)
+			{
+				// Add user 
+				send_mtype = 102;
+			}
+
+			else if (option == 3)
+			{	
+				// drone command control
+				send_mtype = 102;
+				/*send_mtype = 200; DECISION YET TO BE MADE*/
+			}
+
+			else 
+			{
+				printf("Incorrect Option entered. Program exiting. \n\n");
+				exit(1);
+			}
+
+			break;
+		}
+
+		case 202:
+		{
+			printf("New User added. \n");
+			int option = show_menu();
+
+			if (option==1)
+			{	// Change password in next message
+				send_mtype = 101;
+/*
+				printf("%d\n",ssock);
+	*/
+			}
+			else if(option==2)
+			{
+				// Add user 
+				send_mtype = 102;
+			}
+
+			else if (option == 3)
+			{	
+				// drone command control
+				send_mtype = 102;
+				/*send_mtype = 200; DECISION YET TO BE MADE*/
+			}
+
+			else 
+			{
+				printf("Incorrect Option entered. Program exiting. \n\n");
+				exit(1);
+			}
+
+			break;
+		}
+
 		case 204:
 			close(ssock);
 			printf("Incorrect Authentication! Exiting.\n");
