@@ -282,7 +282,7 @@ while(1)
 				strcpy(curr_user, name);
 				send_mtype = 200; //telling the user he is good.
 				}
-				else
+				else if (match(name,pw) == 1)
 				{
 				goodbye(evil);
 				send_mtype = 204; // telling the user is out.

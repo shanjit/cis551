@@ -1,4 +1,4 @@
-/*The server creates a connection using the ssock socket and the client connects to a csock socket using the accept command*/
+//*The server creates a connection using the ssock socket and the client connects to a csock socket using the accept command*/
 
 
 // Control sequence
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 /*	// make sure the database file exists
 	/*create_database();*/
 
-	char buffer[20] = "192.168.1.3";
+	char buffer[20] = "192.168.1.1";
     struct sockaddr_in servaddr, cliaddr;
     socklen_t len = sizeof(servaddr);
 	char servip[20];
@@ -292,6 +292,10 @@ int main(int argc, char *argv[])
 				sprintf(packet->payload, "%s:%s", argv[2], argv[3]);
 			}
 
+
+			
+
+
 			// SEND DATA BACK TO CLIENT
 			if(send(csock, packet, sizeof(app_packet), 0) < 0) { /* echo the client message back to the client */
 				printf("send() failed to send data back to client.\n");
@@ -299,6 +303,14 @@ int main(int argc, char *argv[])
 				close(ssock);
 				exit(8);
 			}
+
+			if (send_mtype == 204)
+			{
+				exit(1); 
+			}
+
+
+
 		}
 		while(rb != 0);
 	}
