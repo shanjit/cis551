@@ -51,7 +51,6 @@ int is_user_present(char *user_name, FILE *database)
 	{
 		if(strcmp(user_in_file, user_name) == 0)
 		{
-			printf("user is present\n");
 			return 1;
 		}
 	}
@@ -95,7 +94,6 @@ int update_passwd(char *user_name, char *passwd)
 	rewind(database);
 	while(fscanf(database, "%s\t%s\n", users_in_file[i], passwds_in_file[i]) != EOF)
 	{
-		printf("%s\n",users_in_file[i]);
 		i++;
 	}
 	fclose(database);
@@ -294,7 +292,6 @@ int main(int argc, char *argv[])
 				sprintf(packet->payload, "%s:%s", argv[2], argv[3]);
 			}
 
-			printf("Before send\n");
 			// SEND DATA BACK TO CLIENT
 			if(send(csock, packet, sizeof(app_packet), 0) < 0) { /* echo the client message back to the client */
 				printf("send() failed to send data back to client.\n");
@@ -302,7 +299,6 @@ int main(int argc, char *argv[])
 				close(ssock);
 				exit(8);
 			}
-			printf("message sent!\n");
 		}
 		while(rb != 0);
 	}
