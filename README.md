@@ -65,8 +65,16 @@ To run the client on a machine after connecting to the ar-drone. The following c
 ./client 192.168.1.1 <username> <password> 
 
 The following menu appears on successful authentication, 
+
+
 		Choose among the following options:
+
+
 		1. Update your password:
+
+
 		2. Add new User:
+
+
 Waiting for user option. If an incorrect option is selected the client code exits. 
 
