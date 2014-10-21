@@ -9,7 +9,7 @@ Contributors:
 
 List of Todos:
 
-1. Accept problem. - Nachiket
+1. Accept problem. - Nachiket. DONE. Use ./start.sh instead ;)
 
 2. Command line interface. - Shan
 
