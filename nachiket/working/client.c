@@ -130,9 +130,7 @@ int main(int argc, char *argv[])
 		/*strcpy(packet->payload, "Hey!");
 		*/
 		
-		printf("before send\n");
 		issent = send(ssock, packet, sizeof(app_packet), 0);
-		printf("message sent!\n");
 	
 		// PUT RECEIVED DATA INTO data_buf
 		if( recv(ssock, data_buf, sizeof(data_buf), 0) == -1 ) { /* wait for a client message to arrive */
