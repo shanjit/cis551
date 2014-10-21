@@ -8,11 +8,13 @@ Contributors:
 
 
 List of Todos:
-1. Accept problem.
 
-2. Command line interface.
+1. Accept problem. - Nachiket
 
-3. 
+2. Command line interface. - Shan
 
-4.
+3. Code fragmentation - Ameya
+
+
+Everyone is working in their own folders for now. The two files we are implementing are server.c and client.c
 
