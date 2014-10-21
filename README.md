@@ -16,3 +16,5 @@ List of Todos:
 3. Code fragmentation - Ameya
 
 
+Everyone is working in their own folders for now. The two files we are implementing are server.c and client.c
+
