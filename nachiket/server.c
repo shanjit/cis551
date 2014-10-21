@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------------------------
 
-	char buffer[20] = "127.0.0.1";
+	char buffer[20] = "192.168.42.249";
     struct sockaddr_in servaddr, cliaddr;
     socklen_t len = sizeof(servaddr);
 	char servip[20];

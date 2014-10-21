@@ -1,6 +1,7 @@
-avinash	shan
-nachiket	shan
-shan	nachiket
-ameya	moore
-shanjit	shanjitsingh
 cde	fg
+shanjit	shanjitsingh
+ameya	moore
+shan	nachiket
+nachiket	shan
+avinash	avinash
+savy	singh

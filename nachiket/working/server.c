@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 /*	// make sure the database file exists
 	/*create_database();*/
 
-	char buffer[20] = "127.0.0.1";
+	char buffer[20] = "192.168.42.249";
     struct sockaddr_in servaddr, cliaddr;
     socklen_t len = sizeof(servaddr);
 	char servip[20];
@@ -193,14 +193,14 @@ int main(int argc, char *argv[])
 	while(1)
 	{
 
-		printf("waiting\n");
+		/*printf("waiting\n");*/
 
 		if((csock = accept(ssock, (struct sockaddr *) &cliaddr, &namelen)) < 0) {
 		printf("accept() failed to accept client connection request.\n");
 		close(ssock);
 		exit(6);
 		}
-		printf("Connection accepted");
+		/*printf("Connection accepted");*/
 
 		inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, 20);
 		printf("Receiving message from: %s %d.", cliip, ntohs(cliaddr.sin_port));
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
 			close(ssock);
 			exit(7);
 			}
-			printf("recvd");
+			/*printf("recvd");*/
 		
 			// PROCESS DATA_BUF and decide what to do in next message
 			app_packet *read_packet;
