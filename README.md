@@ -1,8 +1,8 @@
 CIS551
 ======
 Contributors:
-  Nachiket 
-  Ameya Moore
+  Nachiket,
+  Ameya Moore,
   Shan
 
 OBJECTIVE
@@ -18,7 +18,7 @@ Code Structure
 ==============
 
 Communication
-++++++++++++++
+-------------
 The communication between the server and the client is done using TCP. Appropriate sockets, binding and listen/accept functions are used from the imported C libraries. 
 
 Each message made for communication is a packet which has the following structure, 
@@ -47,7 +47,7 @@ The client on its end uses the control_seq to classify the messages from the ser
 	d) New User added (control_seq = 202) - In this case the payload has nothing. The message from the server means that the client has successfully added a new user with the given username and password. 
 
 Server
-++++++
+------
 On the server side a socket is started, binded to the port and ipaddress of the drone (192.168.1.1). This is then used to listen for any incoming connections. The message structure being maintained as described above, the server deals with the 'control_seq' appropriately and send back messages to the client. 
 
 Running the Server Code
@@ -55,7 +55,7 @@ Running the Server Code
 This is as simple as ./server. For the ar-drone since its ipaddress is always 192.168.1.1 this works directly. For any change in ipaddress, the server.c code needs to be updated. 
 
 Client
-++++++
+------
 On the client side, a socket is created and the user enters the <ip-address> of the server with the username and the password when running the client program itself. If the user is authenticated using the username and password combination entered. The user is presented with a menu to either update the password or add a new user. 
 
 
