@@ -174,6 +174,8 @@ int create_database()
 
 int main(int argc, char *argv[])
 {
+
+	
 	char data_buf[512];
 	char name[NAMELEN];
 	char pw[PASSLEN];
@@ -192,7 +194,7 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------------------------
 
-	char buffer[20] = "158.130.168.107";
+	char buffer[20] = "10.0.0.35";
     struct sockaddr_in servaddr, cliaddr;
     socklen_t len = sizeof(servaddr);
 	char servip[20];

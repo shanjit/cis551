@@ -3,3 +3,5 @@ nachiket	shan
 shan	shan
 ameya	moore
 shanjit	shanjitsingh
+joj	joj
+savy	savy
