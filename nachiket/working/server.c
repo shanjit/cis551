@@ -56,7 +56,7 @@ int is_user_present(char *user_name, FILE *database)
 	}
 	return 0;
 }
-		
+
 int add_user(char *user_name, char *passwd)
 {
 	FILE *database;
@@ -128,7 +128,6 @@ int create_database()
 
 int main(int argc, char *argv[])
 {
-	// interface socket
 	int ssock; 
 	char data_buf[BUFLEN];
 	char name[NAMELEN];
@@ -136,15 +135,13 @@ int main(int argc, char *argv[])
 	char curr_user[NAMELEN];
 	char *good = "Welcome to The Machine!\n";
 	char *evil = "Invalid identity, exiting!\n";
-	
+
 	unsigned int send_mtype;
 
-/*	// make sure the database file exists
-	/*create_database();*/
 
-	char buffer[20] = "192.168.42.249";
-    struct sockaddr_in servaddr, cliaddr;
-    socklen_t len = sizeof(servaddr);
+	char buffer[20] = "192.168.1.1";
+	struct sockaddr_in servaddr, cliaddr;
+	socklen_t len = sizeof(servaddr);
 	char servip[20];
 	int csock;
 
@@ -157,8 +154,7 @@ int main(int argc, char *argv[])
 	int optval = 1;
 	setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
-	// signal(SIGPIPE, SIG_IGN);
-	
+
 	// --- clear out memory and assign IP parameters --- //
 	memset((char *) &servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
@@ -178,48 +174,46 @@ int main(int argc, char *argv[])
 	}
 
 	int err = getsockname(ssock, (struct sockaddr *) &servaddr, &len);
-	
+
 	if( listen(ssock, 5) < 0 ) { /* listen for a connection */
 		printf("listen() failed\n");
 		close(ssock);
 		exit(5);
 	}
 
-	// RECEIVING STUFF
-	int namelen = sizeof(cliaddr); /* accept connection request */
+	int namelen = sizeof(cliaddr); 
 	char cliip[20];
 
 
 	while(1)
 	{
 
-		/*printf("waiting\n");*/
-
+		printf("waiting\n");
+		/*  Accept connection from client */
 		if((csock = accept(ssock, (struct sockaddr *) &cliaddr, &namelen)) < 0) {
-		printf("accept() failed to accept client connection request.\n");
-		close(ssock);
-		exit(6);
+			printf("accept() failed to accept client connection request.\n");
+			close(ssock);
+			exit(6);
 		}
-		/*printf("Connection accepted");*/
+		printf("Connection accepted");
 
 		inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, 20);
 		printf("Receiving message from: %s %d.", cliip, ntohs(cliaddr.sin_port));
-		// fflush(stdout);
-		// PUT RECEIVED DATA INTO data_buf
 		int rb;
 		do
 		{
+			/* Wait for client to initiate communication */
+
 			rb = recv(csock, data_buf, sizeof(data_buf), 0); /* wait for a client message to arrive */
 			if(rb < 0)
 			{
-			printf("recv() did not get client data\n");
-			close(csock);
-			close(ssock);
-			exit(7);
+				printf("recv() did not get client data\n");
+				close(csock);
+				close(ssock);
+				exit(7);
 			}
-			/*printf("recvd");*/
-		
-			// PROCESS DATA_BUF and decide what to do in next message
+			printf("recvd");
+
 			app_packet *read_packet;
 			read_packet = (app_packet *)data_buf;
 
@@ -227,11 +221,8 @@ int main(int argc, char *argv[])
 
 			switch(read_packet->control_seq)
 			{
-				case 100:
+				case 100: /* Case of initial authentication */
 					sscanf(read_packet->payload, "%16[^:]:%s", name,pw);
-				/*	printf("%s\n", name);
-					printf("%s\n", pw);
-				*/
 					if( match(name,pw) == 0 )
 					{
 						welcome(good);
@@ -243,56 +234,35 @@ int main(int argc, char *argv[])
 						goodbye(evil);
 						send_mtype = 204; // telling the user is out.
 					}
-				break;
-				case 101:
-					update_passwd(curr_user, read_packet->payload);
-					/*printf("%s\n", curr_user);*/
-					send_mtype = 201;
-					
 					break;
-				case 102:
+				case 101: /* Case to upate password of user */
+					update_passwd(curr_user, read_packet->payload);
+					send_mtype = 201;
+
+					break;
+				case 102: /* Case of adding new user */
 					sscanf(read_packet->payload, "%16[^:]:%s", name,pw);
 					add_user(name, pw);
 					send_mtype = 202;
 					break;
 
-				case 103:
+				case 103: /* Unused case for adding more features */
 					break;
 
-				case 104:
+				case 104: /* Unused case for adding more features */
 					break;
 
 				default:
 					printf("stuff happened\n");
 			}
-			
-			
-			/*printf("%s\n", read_packet->payload);*/
-			// see the sscanf example here 
-		/*	char username[NAMELEN];
-			char password[PASSLEN];
-			sscanf(read_packet->payload, "%16[^:]:%s", username, password);
-			printf("%s\n", username);
-			printf("%s\n", password);
-		*/
 
-
-		 	// -- Send the message back to the client
-
+			/* Create the response packet */
 			char raw_packet[BUFLEN];
 			app_packet *packet = (app_packet *)raw_packet;
 			memset(raw_packet, 0, BUFLEN);
 			packet->control_seq = send_mtype;
-			
-			//make a payload with sprintf
-			
-			// make payload when printing command outputs, else no payload ;)
-			if (packet->control_seq == 106)
-			{
-				sprintf(packet->payload, "%s:%s", argv[2], argv[3]);
-			}
 
-			// SEND DATA BACK TO CLIENT
+			/* Send the response to client */
 			if(send(csock, packet, sizeof(app_packet), 0) < 0) { /* echo the client message back to the client */
 				printf("send() failed to send data back to client.\n");
 				close(csock);
@@ -300,7 +270,7 @@ int main(int argc, char *argv[])
 				exit(8);
 			}
 		}
-		while(rb != 0);
+		while(rb != 0); /* Go back to listening state for new messages from client */
 	}
 	close(csock);
 	close(ssock);
