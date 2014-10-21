@@ -291,20 +291,8 @@ switch(read_packet->control_seq)
 			printf("stuff happened\n");
 	}
 
-
-
-
-
-
-
-
-
 }
 
 return 0;
-
-
-
-
 
 }

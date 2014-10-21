@@ -1,7 +1,7 @@
-avinash	shan
-nachiket	shan
-shan	shan
-ameya	moore
-shanjit	shanjitsingh
-joj	joj
 savy	savy
+joj	joj
+shanjit	shanjitsingh
+ameya	moore
+shan	savy
+nachiket	shan
+avinash	shan
