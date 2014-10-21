@@ -69,9 +69,7 @@ The following menu appears on successful authentication,
 
 		Choose among the following options:
 
-
 		1. Update your password:
-
 
 		2. Add new User:
 
