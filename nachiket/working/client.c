@@ -18,7 +18,6 @@ int show_menu()
 	printf("Choose among the following options:\n");
 	printf("1. Update your password:\n");
 	printf("2. Add new User:\n");
-	printf("3. Execute Command on drone:\n");
 
 	printf("Please Enter Option: ");
 	scanf("%d", &option);
@@ -150,12 +149,12 @@ int main(int argc, char *argv[])
 						send_mtype = 102;
 					}
 
-					else if (option == 3)
+/*					else if (option == 3)
 					{	
-						/* Unused case for phase 1*/
+						// drone command control
 						send_mtype = 102;
-						/*send_mtype = 200; DECISION YET TO BE MADE*/
-					}
+						
+					}*/
 
 					else 
 					{
@@ -182,12 +181,12 @@ int main(int argc, char *argv[])
 						send_mtype = 102;
 					}
 
-					else if (option == 3)
+/*					else if (option == 3)
 					{	
 						// drone command control
 						send_mtype = 102;
-						/*send_mtype = 200; DECISION YET TO BE MADE*/
-					}
+						
+					}*/
 
 					else 
 					{
@@ -214,12 +213,12 @@ int main(int argc, char *argv[])
 						send_mtype = 102;
 					}
 
-					else if (option == 3)
+/*					else if (option == 3)
 					{	
 						// drone command control
 						send_mtype = 102;
-						/*send_mtype = 200; DECISION YET TO BE MADE*/
-					}
+						
+					}*/
 
 					else 
 					{
