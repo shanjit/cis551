@@ -10,33 +10,9 @@
 // 203 - this is the output of a command i sent earlier. 
 
 
-/* Header Files */
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
+#include "defs.h"
 
-
-#define NAMELEN 16
-#define PASSLEN 16
-
-char username[NAMELEN];
-char password[PASSLEN];
-char ip[16]; // change this depending on ipv6 or ipv4
-
-#define BUFLEN 256
-
-struct app_packet
-{
-	unsigned int control_seq;
-	char payload[BUFLEN];
-};
-
+//char ip[16]; // change this depending on ipv6 or ipv4
 
 
 int show_menu()
@@ -54,8 +30,10 @@ int show_menu()
 
 int main(int argc, char *argv[])
 {
-	char servip[16];
-	char data_buf[512];
+	char username[NAMELEN];
+	char password[PASSLEN];
+	char servip[20];
+	char data_buf[BUFLEN];
 	unsigned int send_mtype;
 	// interface socket
 	int ssock; 
@@ -69,7 +47,7 @@ int main(int argc, char *argv[])
 	
 	else if(argc==4)
 	{
-		strncpy(servip, argv[1], 16);
+		strncpy(servip, argv[1], 20);
 		strncpy(username, argv[2], NAMELEN);
 		strncpy(password, argv[3], PASSLEN);
 		printf("Connecting to:%s with username:%s and pass:%s \n", servip, username, password);
@@ -90,13 +68,10 @@ int main(int argc, char *argv[])
 	// --- client initialization --- //
 	ssock = socket(AF_INET, SOCK_STREAM, 0);
 
-	send_mtype = 100;
+	int optval = 1;
+	setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
-	if (connect(ssock, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-		perror("connect failed");
-		close(ssock);
-		return -1;
-	}
+	send_mtype = 100;
 
 	
 	inet_ntop(AF_INET, &servaddr.sin_addr, servip, 20);
@@ -104,13 +79,19 @@ int main(int argc, char *argv[])
 	fflush(stdout);
 
 	char raw_packet[BUFLEN];
-	struct app_packet *packet = (struct app_packet *)raw_packet;
+	app_packet *packet = (app_packet *)raw_packet;
 	int issent;
-	struct app_packet *read_packet;
+	app_packet *read_packet;
 
 
 	while(1)
 	{
+		if (connect(ssock, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+		perror("connect failed");
+		close(ssock);
+		return -1;
+		}
+
 		memset(raw_packet, 0, BUFLEN);
 		packet->control_seq = send_mtype;
 
@@ -152,9 +133,9 @@ int main(int argc, char *argv[])
 		/*strcpy(packet->payload, "Hey!");
 		*/
 		
-
-		issent = send(ssock, packet, sizeof(struct app_packet), 0);
-
+		printf("before send\n");
+		issent = send(ssock, packet, sizeof(app_packet), 0);
+		printf("message sent!\n");
 	/*
 		printf("%d\n", issent);
 		printf("message sent!\n");
@@ -168,7 +149,7 @@ int main(int argc, char *argv[])
 
 		// PROCESS DATA_BUF and decide what to do in next message
 		
-		read_packet = (struct app_packet *)data_buf;
+		read_packet = (app_packet *)data_buf;
 
 	/*	printf("%d\n", read_packet->control_seq);
 	*/
@@ -286,6 +267,7 @@ int main(int argc, char *argv[])
 
 				printf("stuff happened\n");
 		}
+		close(ssock);
 	}
 return 0;
 }

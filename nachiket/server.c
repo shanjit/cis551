@@ -9,54 +9,13 @@
 
 
 
-
-/* Header Files */
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define BUFLEN 512
-
-#define NAMELEN 16
-#define PASSLEN 16
-
-#define MAX_USERS 8
-#define MAX_UNAME 32
-#define MAX_PASSWD 32
-
-#define SUCCESS 0
-#define USER_ALREADY_EXISTS 1
-#define FILE_DOESNT_EXIST 2
-#define USER_DOESNT_EXIST 3
-
-char curr_user[MAX_UNAME];
-
-struct app_packet
-{
-	unsigned int control_seq;
-	char payload[256];
-};
-
-
-int match1(char *s1, char *s2)
-{
-	while( *s1 != '\0' && *s2 != 0 && *s1 == *s2 ){
-			s1++; s2++;
-	}
-	return( *s1 - *s2 );
-}
+#include "defs.h"
 
 int match(char *user_name, char *passwd)
 {
 	FILE *database;
-	char user_in_file[MAX_UNAME];
-	char passwd_in_file[MAX_PASSWD];
+	char user_in_file[NAMELEN];
+	char passwd_in_file[PASSLEN];
 	database = fopen("./database.txt", "r");
 	while(fscanf(database, "%s\t%s\n", user_in_file, passwd_in_file) != EOF)
 	{
@@ -74,9 +33,9 @@ int match(char *user_name, char *passwd)
 
 
 void welcome(char *str) 
-	{
-		printf(str); 
-	}
+{
+	printf(str); 
+}
 
 
 void goodbye(char *str) {void exit(); printf(str); 
@@ -86,8 +45,8 @@ void goodbye(char *str) {void exit(); printf(str);
 
 int is_user_present(char *user_name, FILE *database)
 {
-	char user_in_file[MAX_UNAME];
-	char passwd_in_file[MAX_PASSWD];
+	char user_in_file[NAMELEN];
+	char passwd_in_file[PASSLEN];
 	while(fscanf(database, "%s\t%s\n", user_in_file, passwd_in_file) != EOF)
 	{
 		if(strcmp(user_in_file, user_name) == 0)
@@ -120,8 +79,8 @@ int update_passwd(char *user_name, char *passwd)
 {
 	FILE *database;
 	int i = 0;
-	char users_in_file[MAX_USERS][MAX_UNAME];
-	char passwds_in_file[MAX_USERS][MAX_PASSWD];
+	char users_in_file[MAX_USERS][NAMELEN];
+	char passwds_in_file[MAX_USERS][PASSLEN];
 	database = fopen("database.txt", "r");
 	if(!database)
 	{
@@ -173,13 +132,14 @@ int main(int argc, char *argv[])
 {
 	// interface socket
 	int ssock; 
-	char data_buf[512];
+	char data_buf[BUFLEN];
 	char name[NAMELEN];
 	char pw[PASSLEN];
+	char curr_user[NAMELEN];
 	char *good = "Welcome to The Machine!\n";
 	char *evil = "Invalid identity, exiting!\n";
 	
-	unsigned send_mtype;
+	unsigned int send_mtype;
 
 /*	// make sure the database file exists
 	/*create_database();*/
@@ -191,101 +151,110 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------------------------
 
-	char buffer[20] = "158.130.168.107";
+	char buffer[20] = "127.0.0.1";
     struct sockaddr_in servaddr, cliaddr;
     socklen_t len = sizeof(servaddr);
 	char servip[20];
 	int csock;
 
 	/*create a socket*/
-	ssock = socket(AF_INET, SOCK_STREAM, 0);
+	if ((ssock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		perror("cannot create socket");
+		exit(1);
+	}
+
+	int optval = 1;
+	setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+
+	signal(SIGPIPE, SIG_IGN);
 	
 	// --- clear out memory and assign IP parameters --- //
 	memset((char *) &servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = inet_addr(buffer);
-	servaddr.sin_port = htons(10551);
+	servaddr.sin_port = htons(PORTNUM);
 
 	inet_ntop(AF_INET, &servaddr.sin_addr, servip, 20);
 	printf("Starting server on: %s %d. \n", servip, ntohs(servaddr.sin_port));
 	fflush(stdout);
 
 	// --- bind socket --- //
-	if (bind(ssock, (struct sockaddr *) &servaddr, sizeof(servaddr)))
+	if (bind(ssock, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
 	{
 		perror("Error Binding");
-
-
+		close(ssock);
+		exit(5);
 	}
 
 	
 	len = sizeof(servaddr);
 	int err = getsockname(ssock, (struct sockaddr *) &servaddr, &len);
-
-
 	
-	if( listen(ssock, 1) != 0 ) { /* listen for a connection */
-		fprintf(stderr, "listen() failed\n");
+	if( listen(ssock, 5) < 0 ) { /* listen for a connection */
+		printf("listen() failed\n");
+		close(ssock);
 		exit(5);
 	}
 
-
-
 	// RECEIVING STUFF
 	int namelen = sizeof(cliaddr); /* accept connection request */
-
 	char cliip[20];
 
-
-	if( (csock = accept(ssock, (struct sockaddr *) &cliaddr, &namelen)) == -1) {
-		fprintf(stderr, "accept() failed to accept client connection request.\n");
-		exit(6);
-	}
-
-	inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, 20);
-	printf("Receiving message from: %s %d.", cliip, ntohs(cliaddr.sin_port));
-	fflush(stdout);
 
 	while(1)
 	{
 
+		printf("waiting\n");
 
-
-		// PUT RECEIVED DATA INTO data_buf
-		if( recv(csock, data_buf, sizeof(data_buf), 0) == -1 ) { /* wait for a client message to arrive */
-			fprintf(stderr, "recv() did not get client data\n");
-			exit(7);
+		if((csock = accept(ssock, (struct sockaddr *) &cliaddr, &namelen)) < 0) {
+		printf("accept() failed to accept client connection request.\n");
+		close(ssock);
+		exit(6);
 		}
+		printf("Connection accepted");
+
+		inet_ntop(AF_INET, &cliaddr.sin_addr, cliip, 20);
+		printf("Receiving message from: %s %d.", cliip, ntohs(cliaddr.sin_port));
+		// fflush(stdout);
+		// PUT RECEIVED DATA INTO data_buf
+		int rb;
+		do
+		{
+			rb = recv(csock, data_buf, sizeof(data_buf), 0); /* wait for a client message to arrive */
+			if(rb < 0)
+			{
+			printf("recv() did not get client data\n");
+			close(csock);
+			close(ssock);
+			exit(7);
+			}
+			printf("recvd");
 		
 		// PROCESS DATA_BUF and decide what to do in next message
-		struct app_packet *read_packet;
-		read_packet = (struct app_packet *)data_buf;
-		
-		printf("%s\n", read_packet);
+		app_packet *read_packet;
+		read_packet = (app_packet *)data_buf;
 
 		printf("%d\n", read_packet->control_seq);
 
 		switch(read_packet->control_seq)
 		{
 			case 100:
-					sscanf(read_packet->payload, "%16[^:]:%s", name,pw);
-				/*	printf("%s\n", name);
-					printf("%s\n", pw);
-				*/
-					if( match(name,pw) == 0 )
-					{
+				sscanf(read_packet->payload, "%16[^:]:%s", name,pw);
+			/*	printf("%s\n", name);
+				printf("%s\n", pw);
+			*/
+				if( match(name,pw) == 0 )
+				{
 					welcome(good);
 					strcpy(curr_user, name);
 					send_mtype = 200; //telling the user he is good.
-					}
-					else
-					{
+				}
+				else
+				{
 					goodbye(evil);
 					send_mtype = 204; // telling the user is out.
-					}
-					
-
-				break;
+				}
+			break;
 			case 101:
 				update_passwd(curr_user, read_packet->payload);
 				/*printf("%s\n", curr_user);*/
@@ -300,11 +269,8 @@ int main(int argc, char *argv[])
 				send_mtype = 202;
 				break;
 
-
-
 			case 103:
 				break;
-
 
 			case 104:
 				break;
@@ -327,7 +293,7 @@ int main(int argc, char *argv[])
 	 	// -- Send the message back to the client
 
 		char raw_packet[BUFLEN];
-		struct app_packet *packet = (struct app_packet *)raw_packet;
+		app_packet *packet = (app_packet *)raw_packet;
 		memset(raw_packet, 0, BUFLEN);
 		packet->control_seq = send_mtype;
 		
@@ -339,18 +305,17 @@ int main(int argc, char *argv[])
 			sprintf(packet->payload, "%s:%s", argv[2], argv[3]);
 		}
 
-		/*strcpy(packet->payload, "Hey!");
-		*/
-		
+		printf("Before send\n");
 		// SEND DATA BACK TO CLIENT
-		if( send( csock, packet, sizeof(struct app_packet), 0) < 0) { /* echo the client message back to the client */
-			fprintf(stderr, "send() failed to send data back to client.\n");
+		if(send(csock, packet, sizeof(app_packet), 0) < 0) { /* echo the client message back to the client */
+			printf("send() failed to send data back to client.\n");
+			close(csock);
+			close(ssock);
 			exit(8);
 		}
 		printf("message sent!\n");
-
-
-
+	}
+	while(rb != 0);
 	}
 	close(csock);
 	close(ssock);
