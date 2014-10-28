@@ -1,0 +1,27 @@
+Script started on Tue 21 Oct 2014 08:29:07 PM EDT
+]0;nachiket@nachiket-Inspiron-5537: ~/Desktop/code/551/HW2/cis551/nachiket/workingnachiket@nachiket-Inspiron-5537:~/Desktop/code/551/HW2/cis551/nachiket/working$  exit./client 192.168.1.1 shan nahc[K[K[K[K[K[K[K[K[Kcde fg
+Connecting to:192.168.1.1 with username:cde and pass:fg 
+Choose among the following options:
+1. Update your password:
+2. Add new User:
+Please Enter Option: 1
+Enter new password: abcde
+Password Updated. 
+Choose among the following options:
+1. Update your password:
+2. Add new User:
+Please Enter Option: 2
+Enter new username: nachiket1
+Enter new password: nachiket
+New User added. 
+Choose among the following options:
+1. Update your password:
+2. Add new User:
+Please Enter Option: ^C
+]0;nachiket@nachiket-Inspiron-5537: ~/Desktop/code/551/HW2/cis551/nachiket/workingnachiket@nachiket-Inspiron-5537:~/Desktop/code/551/HW2/cis551/nachiket/working$  ./client 192.168.1.1 cde fg
+Connecting to:192.168.1.1 with username:cde and pass:fg 
+Incorrect Authentication! Exiting.
+]0;nachiket@nachiket-Inspiron-5537: ~/Desktop/code/551/HW2/cis551/nachiket/workingnachiket@nachiket-Inspiron-5537:~/Desktop/code/551/HW2/cis551/nachiket/working$  exit
+exit
+
+Script done on Tue 21 Oct 2014 08:30:52 PM EDT
