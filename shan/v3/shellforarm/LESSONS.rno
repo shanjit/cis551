@@ -1,0 +1,166 @@
+.rm)k
+.nr Ds 0
+.TL
+Lessons Learned in a Software Design Exercise
+.AF "Computer Science Department"
+.ds XX "Columbia University, New York, NY 10027
+.AU "Jonathan M. Smith" JMS XX
+.AS 1 10
+This documents describes some mistakes made, and lessons
+learned from the mistakes,
+in the design of a substantial program.
+The program is a subset of the UNIX command interpreter,
+or shell.
+.P
+In addition to documenting some of the pitfalls
+of software design, this document illustrates
+the intention of an exercise assigned to COMSW3152y,
+Software Design Lab, to produce "Lessons Learned"
+documents.
+.AE
+.MT 4
+.H 1 "Introduction"
+There were several phases in the construction
+of the command interpreter.
+These were as follows:
+.BL 3
+.LI
+I/O redirection, that is changing the association of file
+to file descriptor for the execution of a command.
+Execution of a command involved distinguishing between
+arguments to the command and redirections;
+construction of a context-free grammar describing
+the input was necessary.
+.LI
+File name generation, using the '*' and '?'
+metacharacters, and the '[' and ']' to delineate
+character classes.
+.LI
+Shell variables, or string-valued parameters
+were added.
+Methods of assigning values to these parameters,
+as well as marking them "exported" or "readonly"
+were designed.
+.LI
+Pipelines were used to connect the input and
+output of cooperating sequential processes.
+.LI
+Three kinds of quotation marks,
+\fB`,',\fR and \fB"\fR,
+were added.
+Single and double quotes provide
+true "quotation" features, allowing
+white space, for example,
+to be included in shell variables.
+Backquotes cause command substitution to occur
+for the command string contained in the backquotes.
+.LE
+Each of these phases is discussed in a section of this document.
+.H 1 "Redirection"
+Since this was the first part of the command interpreter
+to be constructed, it was most rife with design decisions.
+.P
+One lesson is that one shouldn't be afraid to let
+the lexical analyzer do extra work.
+For example, I had originally only recognized
+'>', '>>', '<<' and '<' as redirection characters,
+figuring that I could pick up the '&' in higher
+level routines.
+This led to some really distorted code,
+which was really doing its own lexical analysis.
+When I recognized this, I stuffed rules
+for '>&' and '<&' into the analyzer.
+
+.P
+One design principle that \fII\fR kept in mind was that
+all of the work should be done by a process other than
+the command interpreter itself.
+In this way, the state information, such as the open file descriptors,
+could be maintained by the command interpreter,
+while it could cause altered environments for subprocesses.
+Thus, the parsing phase (done with the YACC-generated
+parser) would create a compact description
+of the redirections to be performed,
+and the compact description
+would then be used
+by a subprocess created with \fIfork()\fR
+to carry out the redirections.
+In passing,
+it is important to note that.
+.H 1 "File Name Generation"
+File name generation was done in several
+phases.
+The first phase was to get the metacharacters
+working properly
+in the case
+of the current directory.
+This wasn't particularly difficult,
+and I stole the Korn Shell's
+pattern matcher.
+One problem that I ran into here
+(and one that no doubt happens a lot!)
+was an argument mismatch of a subtle nature.
+The Korn Shell gmatch() routine
+takes arguments <string, pattern>.
+However, since I had constructed my pattern matcher
+to take
+<pattern, string> as the argument order,
+I called the ksh routine the same way.
+This was a subtle problem since the argument
+mismatch was not syntactic - both arguments
+were character pointers.
+The problem was semantic, in that the position
+(the ordering) caused the 
+meaning of the arguments to be taken
+on.
+When the matcher didn't work on simple cases,
+I quickly threw some diagnostic I/O statements in,
+and uncovered the problem.
+.P
+A good rule is to not to try to be too clever \fItoo soon\fR.
+For example, I saw that a stack was a comfortable data structure
+to stash file names when passing through a directory,
+and easy to use when doing multi-directory
+file name generation.
+However,
+I spent very little time debugging these routines at first,
+but since everything else was dependent upon getting them
+working, the bugs that were there took a big toll on
+my testing efforts.
+.P
+Testing brings up another issue.
+I didn't test the directory manipulation
+routines I developed for System V;
+I assumed they would work, as they were relatively simple.
+When they didn't, because I had built so much on top of them,
+the bugs were subtle and hard to locate.
+
+.H 1 "Variables"
+Constructing routines to manipulate the variables was 
+fairly straightforward.
+The major design decision was the recognition;
+that is, where should the "value" part of
+a <name, value>
+pair be substituted for an occurrence of "$name".
+I chose to look for the distinguishing '$' in the
+parser rather than in the lexical analyzer;
+this still seems to me to be a matter of choice.
+It must be done, however,
+before a WORD is interpreted.
+.P
+One mistake I made here was trying to optimize too soon.
+I decided from the beginning to use a hashing
+scheme for insertion and lookup of <name,value>
+pairs.
+This was a decision made more on intuition than
+measurement; that's often a mistake.
+
+.H 1 "Pipelines"
+My scheme of keeping all the work in the child
+didn't work very comfortably here,
+as the processes in the pipeline have to know something
+of one another.
+
+.H 1 "Quotation Marks"
+
+Not done.

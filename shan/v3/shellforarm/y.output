@@ -1,0 +1,619 @@
+State 0 conflicts: 8 shift/reduce
+
+
+Grammar
+
+    0 $accept: lines $end
+
+    1 lines: %empty
+    2      | lines NEWLINE
+    3      | command terminator
+    4      | command NEWLINE
+    5      | lines command NEWLINE
+
+    6 command: pipeline
+    7        | simple_command
+
+    8 $@1: %empty
+
+    9 pipeline: simple_command VERTICALBAR $@1 simple_command
+
+   10 $@2: %empty
+
+   11 pipeline: pipeline VERTICALBAR $@2 simple_command
+
+   12 simple_command: WORD
+   13               | input_output
+   14               | simple_command WORD
+   15               | simple_command input_output
+
+   16 input_output: filedes APPEND filename
+   17             | APPEND filename
+   18             | filedes IN filename
+   19             | IN filename
+   20             | filedes OUT filename
+   21             | OUT filename
+   22             | filedes HERE WORD
+   23             | HERE WORD
+   24             | filedes DUPOUT filespec
+   25             | DUPOUT filespec
+   26             | filedes DUPIN filespec
+   27             | DUPIN filespec
+
+   28 filedes: NUMBER
+
+   29 filespec: filedes
+   30         | '-'
+
+   31 filename: WORD
+
+   32 terminator: AMPERSAND
+   33           | SEMI_COLON
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'-' (45) 30
+error (256)
+NEWLINE (258) 2 4 5
+IN (259) 18 19
+OUT (260) 20 21
+APPEND (261) 16 17
+HERE (262) 22 23
+AMPERSAND (263) 32
+DUPIN (264) 26 27
+DUPOUT (265) 24 25
+SEMI_COLON (266) 33
+VERTICALBAR (267) 9 11
+WORD (268) 12 14 22 23 31
+NUMBER (269) 28
+
+
+Nonterminals, with rules where they appear
+
+$accept (16)
+    on left: 0
+lines (17)
+    on left: 1 2 3 4 5, on right: 0 2 5
+command (18)
+    on left: 6 7, on right: 3 4 5
+pipeline (19)
+    on left: 9 11, on right: 6 11
+$@1 (20)
+    on left: 8, on right: 9
+$@2 (21)
+    on left: 10, on right: 11
+simple_command (22)
+    on left: 12 13 14 15, on right: 7 9 11 14 15
+input_output (23)
+    on left: 16 17 18 19 20 21 22 23 24 25 26 27, on right: 13 15
+filedes (24)
+    on left: 28, on right: 16 18 20 22 24 26 29
+filespec (25)
+    on left: 29 30, on right: 24 25 26 27
+filename (26)
+    on left: 31, on right: 16 17 18 19 20 21
+terminator (27)
+    on left: 32 33, on right: 3
+
+
+State 0
+
+    0 $accept: . lines $end
+
+    IN      shift, and go to state 1
+    OUT     shift, and go to state 2
+    APPEND  shift, and go to state 3
+    HERE    shift, and go to state 4
+    DUPIN   shift, and go to state 5
+    DUPOUT  shift, and go to state 6
+    WORD    shift, and go to state 7
+    NUMBER  shift, and go to state 8
+
+    IN        [reduce using rule 1 (lines)]
+    OUT       [reduce using rule 1 (lines)]
+    APPEND    [reduce using rule 1 (lines)]
+    HERE      [reduce using rule 1 (lines)]
+    DUPIN     [reduce using rule 1 (lines)]
+    DUPOUT    [reduce using rule 1 (lines)]
+    WORD      [reduce using rule 1 (lines)]
+    NUMBER    [reduce using rule 1 (lines)]
+    $default  reduce using rule 1 (lines)
+
+    lines           go to state 9
+    command         go to state 10
+    pipeline        go to state 11
+    simple_command  go to state 12
+    input_output    go to state 13
+    filedes         go to state 14
+
+
+State 1
+
+   19 input_output: IN . filename
+
+    WORD  shift, and go to state 15
+
+    filename  go to state 16
+
+
+State 2
+
+   21 input_output: OUT . filename
+
+    WORD  shift, and go to state 15
+
+    filename  go to state 17
+
+
+State 3
+
+   17 input_output: APPEND . filename
+
+    WORD  shift, and go to state 15
+
+    filename  go to state 18
+
+
+State 4
+
+   23 input_output: HERE . WORD
+
+    WORD  shift, and go to state 19
+
+
+State 5
+
+   27 input_output: DUPIN . filespec
+
+    NUMBER  shift, and go to state 8
+    '-'     shift, and go to state 20
+
+    filedes   go to state 21
+    filespec  go to state 22
+
+
+State 6
+
+   25 input_output: DUPOUT . filespec
+
+    NUMBER  shift, and go to state 8
+    '-'     shift, and go to state 20
+
+    filedes   go to state 21
+    filespec  go to state 23
+
+
+State 7
+
+   12 simple_command: WORD .
+
+    $default  reduce using rule 12 (simple_command)
+
+
+State 8
+
+   28 filedes: NUMBER .
+
+    $default  reduce using rule 28 (filedes)
+
+
+State 9
+
+    0 $accept: lines . $end
+    2 lines: lines . NEWLINE
+    5      | lines . command NEWLINE
+
+    $end     shift, and go to state 24
+    NEWLINE  shift, and go to state 25
+    IN       shift, and go to state 1
+    OUT      shift, and go to state 2
+    APPEND   shift, and go to state 3
+    HERE     shift, and go to state 4
+    DUPIN    shift, and go to state 5
+    DUPOUT   shift, and go to state 6
+    WORD     shift, and go to state 7
+    NUMBER   shift, and go to state 8
+
+    command         go to state 26
+    pipeline        go to state 11
+    simple_command  go to state 12
+    input_output    go to state 13
+    filedes         go to state 14
+
+
+State 10
+
+    3 lines: command . terminator
+    4      | command . NEWLINE
+
+    NEWLINE     shift, and go to state 27
+    AMPERSAND   shift, and go to state 28
+    SEMI_COLON  shift, and go to state 29
+
+    terminator  go to state 30
+
+
+State 11
+
+    6 command: pipeline .
+   11 pipeline: pipeline . VERTICALBAR $@2 simple_command
+
+    VERTICALBAR  shift, and go to state 31
+
+    $default  reduce using rule 6 (command)
+
+
+State 12
+
+    7 command: simple_command .
+    9 pipeline: simple_command . VERTICALBAR $@1 simple_command
+   14 simple_command: simple_command . WORD
+   15               | simple_command . input_output
+
+    IN           shift, and go to state 1
+    OUT          shift, and go to state 2
+    APPEND       shift, and go to state 3
+    HERE         shift, and go to state 4
+    DUPIN        shift, and go to state 5
+    DUPOUT       shift, and go to state 6
+    VERTICALBAR  shift, and go to state 32
+    WORD         shift, and go to state 33
+    NUMBER       shift, and go to state 8
+
+    $default  reduce using rule 7 (command)
+
+    input_output  go to state 34
+    filedes       go to state 14
+
+
+State 13
+
+   13 simple_command: input_output .
+
+    $default  reduce using rule 13 (simple_command)
+
+
+State 14
+
+   16 input_output: filedes . APPEND filename
+   18             | filedes . IN filename
+   20             | filedes . OUT filename
+   22             | filedes . HERE WORD
+   24             | filedes . DUPOUT filespec
+   26             | filedes . DUPIN filespec
+
+    IN      shift, and go to state 35
+    OUT     shift, and go to state 36
+    APPEND  shift, and go to state 37
+    HERE    shift, and go to state 38
+    DUPIN   shift, and go to state 39
+    DUPOUT  shift, and go to state 40
+
+
+State 15
+
+   31 filename: WORD .
+
+    $default  reduce using rule 31 (filename)
+
+
+State 16
+
+   19 input_output: IN filename .
+
+    $default  reduce using rule 19 (input_output)
+
+
+State 17
+
+   21 input_output: OUT filename .
+
+    $default  reduce using rule 21 (input_output)
+
+
+State 18
+
+   17 input_output: APPEND filename .
+
+    $default  reduce using rule 17 (input_output)
+
+
+State 19
+
+   23 input_output: HERE WORD .
+
+    $default  reduce using rule 23 (input_output)
+
+
+State 20
+
+   30 filespec: '-' .
+
+    $default  reduce using rule 30 (filespec)
+
+
+State 21
+
+   29 filespec: filedes .
+
+    $default  reduce using rule 29 (filespec)
+
+
+State 22
+
+   27 input_output: DUPIN filespec .
+
+    $default  reduce using rule 27 (input_output)
+
+
+State 23
+
+   25 input_output: DUPOUT filespec .
+
+    $default  reduce using rule 25 (input_output)
+
+
+State 24
+
+    0 $accept: lines $end .
+
+    $default  accept
+
+
+State 25
+
+    2 lines: lines NEWLINE .
+
+    $default  reduce using rule 2 (lines)
+
+
+State 26
+
+    5 lines: lines command . NEWLINE
+
+    NEWLINE  shift, and go to state 41
+
+
+State 27
+
+    4 lines: command NEWLINE .
+
+    $default  reduce using rule 4 (lines)
+
+
+State 28
+
+   32 terminator: AMPERSAND .
+
+    $default  reduce using rule 32 (terminator)
+
+
+State 29
+
+   33 terminator: SEMI_COLON .
+
+    $default  reduce using rule 33 (terminator)
+
+
+State 30
+
+    3 lines: command terminator .
+
+    $default  reduce using rule 3 (lines)
+
+
+State 31
+
+   11 pipeline: pipeline VERTICALBAR . $@2 simple_command
+
+    $default  reduce using rule 10 ($@2)
+
+    $@2  go to state 42
+
+
+State 32
+
+    9 pipeline: simple_command VERTICALBAR . $@1 simple_command
+
+    $default  reduce using rule 8 ($@1)
+
+    $@1  go to state 43
+
+
+State 33
+
+   14 simple_command: simple_command WORD .
+
+    $default  reduce using rule 14 (simple_command)
+
+
+State 34
+
+   15 simple_command: simple_command input_output .
+
+    $default  reduce using rule 15 (simple_command)
+
+
+State 35
+
+   18 input_output: filedes IN . filename
+
+    WORD  shift, and go to state 15
+
+    filename  go to state 44
+
+
+State 36
+
+   20 input_output: filedes OUT . filename
+
+    WORD  shift, and go to state 15
+
+    filename  go to state 45
+
+
+State 37
+
+   16 input_output: filedes APPEND . filename
+
+    WORD  shift, and go to state 15
+
+    filename  go to state 46
+
+
+State 38
+
+   22 input_output: filedes HERE . WORD
+
+    WORD  shift, and go to state 47
+
+
+State 39
+
+   26 input_output: filedes DUPIN . filespec
+
+    NUMBER  shift, and go to state 8
+    '-'     shift, and go to state 20
+
+    filedes   go to state 21
+    filespec  go to state 48
+
+
+State 40
+
+   24 input_output: filedes DUPOUT . filespec
+
+    NUMBER  shift, and go to state 8
+    '-'     shift, and go to state 20
+
+    filedes   go to state 21
+    filespec  go to state 49
+
+
+State 41
+
+    5 lines: lines command NEWLINE .
+
+    $default  reduce using rule 5 (lines)
+
+
+State 42
+
+   11 pipeline: pipeline VERTICALBAR $@2 . simple_command
+
+    IN      shift, and go to state 1
+    OUT     shift, and go to state 2
+    APPEND  shift, and go to state 3
+    HERE    shift, and go to state 4
+    DUPIN   shift, and go to state 5
+    DUPOUT  shift, and go to state 6
+    WORD    shift, and go to state 7
+    NUMBER  shift, and go to state 8
+
+    simple_command  go to state 50
+    input_output    go to state 13
+    filedes         go to state 14
+
+
+State 43
+
+    9 pipeline: simple_command VERTICALBAR $@1 . simple_command
+
+    IN      shift, and go to state 1
+    OUT     shift, and go to state 2
+    APPEND  shift, and go to state 3
+    HERE    shift, and go to state 4
+    DUPIN   shift, and go to state 5
+    DUPOUT  shift, and go to state 6
+    WORD    shift, and go to state 7
+    NUMBER  shift, and go to state 8
+
+    simple_command  go to state 51
+    input_output    go to state 13
+    filedes         go to state 14
+
+
+State 44
+
+   18 input_output: filedes IN filename .
+
+    $default  reduce using rule 18 (input_output)
+
+
+State 45
+
+   20 input_output: filedes OUT filename .
+
+    $default  reduce using rule 20 (input_output)
+
+
+State 46
+
+   16 input_output: filedes APPEND filename .
+
+    $default  reduce using rule 16 (input_output)
+
+
+State 47
+
+   22 input_output: filedes HERE WORD .
+
+    $default  reduce using rule 22 (input_output)
+
+
+State 48
+
+   26 input_output: filedes DUPIN filespec .
+
+    $default  reduce using rule 26 (input_output)
+
+
+State 49
+
+   24 input_output: filedes DUPOUT filespec .
+
+    $default  reduce using rule 24 (input_output)
+
+
+State 50
+
+   11 pipeline: pipeline VERTICALBAR $@2 simple_command .
+   14 simple_command: simple_command . WORD
+   15               | simple_command . input_output
+
+    IN      shift, and go to state 1
+    OUT     shift, and go to state 2
+    APPEND  shift, and go to state 3
+    HERE    shift, and go to state 4
+    DUPIN   shift, and go to state 5
+    DUPOUT  shift, and go to state 6
+    WORD    shift, and go to state 33
+    NUMBER  shift, and go to state 8
+
+    $default  reduce using rule 11 (pipeline)
+
+    input_output  go to state 34
+    filedes       go to state 14
+
+
+State 51
+
+    9 pipeline: simple_command VERTICALBAR $@1 simple_command .
+   14 simple_command: simple_command . WORD
+   15               | simple_command . input_output
+
+    IN      shift, and go to state 1
+    OUT     shift, and go to state 2
+    APPEND  shift, and go to state 3
+    HERE    shift, and go to state 4
+    DUPIN   shift, and go to state 5
+    DUPOUT  shift, and go to state 6
+    WORD    shift, and go to state 33
+    NUMBER  shift, and go to state 8
+
+    $default  reduce using rule 9 (pipeline)
+
+    input_output  go to state 34
+    filedes       go to state 14

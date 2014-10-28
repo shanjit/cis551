@@ -1,0 +1,45 @@
+
+Things to remember:
+
+	1.) Builtins can easily be redirected. Just look at the proper
+IoCmd[] entry, e.g. IoCmd[0] for stdin, to see if it has some new value.
+This can then be used to put out the builtin's output to the right file.
+
+	2.) Arguments to builtins are just as easy if they're all picked up
+in the normal parsing sweep. File Name Generation will be done automagically.
+
+	3.) The only place where files might be instantiated multiple
+times and *matter* (is this true?) is when multiple outputs are created.
+For normal (non device special) files, this might take the form:
+cat - >foo1 >foo2 >foo3 >>foo4
+In this case, foo[1-3] are opened and created, and closed, and foo4 
+is appended to as the standard output file for cat.
+
+
+Also: HERE documents must be gotten right.
+
+
+&2 doesn't work right. How do we deal with leading "."? Is there an
+easy charcater oriented test. Directory stack looks like
+a kludge to get aroung having get_dir_match() return all the matches
+as an object. May also add a lot of overhead.
+
+Note that we should only sort in expand(), after all of the matches
+have been generated.
+
+
+Have to clean up Sys V dup2(); doesn't seem to work well.
+May be cause of 2>&1 failure to redirect 2; test on Ultrix.
+
+Good_dir() should check access permissions; bad things happen
+if directories to be expanded cannot be read (e.g. core dumps)
+
+There's a bug in HERE document creation; the creation can't be done
+until the parse of the line is over (rather than botched, as it is now)
+since with:
+
+	cat <<HERE >bar
+
+>bar will be sucked up as part of the HERE document input. bletch.
+
+
