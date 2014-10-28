@@ -12,6 +12,8 @@
 
 #include "defs.h"
 
+/* Prints the menu of available options to the user and gets the response from
+   the user */
 int show_menu()
 {
 	int option;

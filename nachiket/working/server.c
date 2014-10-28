@@ -11,6 +11,8 @@
 
 #include "defs.h"
 
+/* Takes user name and password and returns whether the username and password provided
+   by user matches with the user name and password in the database */
 int match(char *user_name, char *passwd)
 {
 	FILE *database;
@@ -42,7 +44,7 @@ void goodbye(char *str) {void exit(); printf(str);
 	/*exit(1); */
 }
 
-
+/* Internal function used to check if username is already present in the database */
 int is_user_present(char *user_name, FILE *database)
 {
 	char user_in_file[NAMELEN];
@@ -57,6 +59,7 @@ int is_user_present(char *user_name, FILE *database)
 	return 0;
 }
 
+/* Function to add a new user */
 int add_user(char *user_name, char *passwd)
 {
 	FILE *database;
@@ -73,7 +76,7 @@ int add_user(char *user_name, char *passwd)
 }
 
 
-
+/* Function to update password in the databse */
 int update_passwd(char *user_name, char *passwd)
 {
 	FILE *database;
@@ -112,7 +115,7 @@ int update_passwd(char *user_name, char *passwd)
 	return SUCCESS;
 }
 
-
+/* Unsued. Maybe used in the future */
 int create_database()
 {
 	FILE *database;
