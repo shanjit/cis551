@@ -74,11 +74,13 @@ main( argc, argv, env )
      // Service any incoming request 
 	   service(connection_fd,name,value, replyGranted,replyDenied);
 
+     // Save the data from the RAM onto the file before exiting.
 	   save( DATABASE );
 
+     // close the connection
 	   close( connection_fd );
+
      printf("Client disconnected\n\n");
-     //printf("Waiting for new connection\n");
      printf("Terminating server!\n");
      break;
     }
@@ -121,6 +123,7 @@ service( int fd, char *name, char *value, char *replyGranted, char *replyDenied)
 
       fix_tcl( buf ); /* hack to interface with tcl scripting language */
 
+      // use find_comma to find out at which position comma occurs
       if( (ptr = find_comma(buf)) != (char *) NULL ) {
 
         ptr_lookup = find_comma(buf);
@@ -138,10 +141,10 @@ service( int fd, char *name, char *value, char *replyGranted, char *replyDenied)
         // lookup takes the username as the argument and returns the password as its argument.
          if( (lookup_result = lookup(name)) != NULL ) {
            /*Correct Name entered*/
-           //printf("lookup_result password: %s\n", lookup_result);
+           // lookup_result returns the password for the name passed as argument to lookup
            if ( strcmp(lookup_result,value) == 0) {
+            /*Correct password entered*/
             /*Access Granted*/
-            //printf("Correct Password: %s\n",value);
             fputs(replyGranted,client_reply);
             fflush(client_reply);
             break;

@@ -67,11 +67,14 @@ Server side
 
 Service Input from Client
 -------------------------
-Read from the STDIN (file stream) into the buffer send_buf using fgets. 
-Write the send_buf (C string) to the server_request (file stream) using fputs. 
-fflush(server_request) to send it to the server
+1. fgets the client_request (file stream) into a buffer. fgets( buf, BUFSIZE, client_request)
+
+2. Use sscanf to take out the string from the buf using a pointer pointed by find_comma, find_equals or find_dollar. This is to find out if he wants to send username, password or add/delete a new username password.
+
+3. Using <name,user> to add or <name$user> to delete.
+
+4. Make a return string and put the string into the file stream client_reply. fflush the stream. 
 
 Send data back to the client
 ----------------------------
-Read from the server_reply (file stream) into the buffer recv_buf using fgets.
-Write the recv_buf (C string) to the STDOUT (user screen) using fprintf. (why not fputs ? See prereading)
+fputs the string into the client_reply file stream and then fflush.
