@@ -1,0 +1,70 @@
+Script started on Wed 22 Oct 2014 12:19:07 PM EDT
+]0;psahay@ubuntu: ~/Desktop/cis551/HW2/tcp_demopsahay@ubuntu:~/Desktop/cis551/HW2/tcp_demo$ telnet 192.168.1.1
+Trying 192.168.1.1...
+Connected to 192.168.1.1.
+Escape character is '^]'.
+
+
+
+BusyBox v1.14.0 () built-in shell (ash)
+Enter 'help' for a list of built-in commands.
+
+# # [Jcd data/video
+# catf  file
+pranav=sahay
+# ./drone[7D# ./drone_server [J
+Servicing Client
+Name entered: pranav
+Password entered: sahay
+Ready to service authenticated user
+User Name to be saved: new_user
+Associated Password: password
+User Name to be saved: bad_user
+Associated Password: password
+Deleting 'bad_user
+'
+User Name to be saved: cis551
+Associated Password: drone_defense
+Client disconnected
+
+Terminating server!
+# cat file
+cis551=drone_defense
+new_user=password
+pranav=sahay
+# # cat file[J# ./drone_server [J
+Servicing Client
+Name entered: new_user
+Password entered: password
+Ready to service authenticated user
+User Name to be saved: new_user
+Associated Password: new_password
+Client disconnected
+
+Terminating server!
+# cat file
+pranav=sahay
+new_user=new_password
+cis551=drone_defense
+# # cat file[J# ./drone_server [J
+Servicing Client
+Name entered: bad_user
+Password entered: password
+Wrong User Name entered
+Client disconnected
+
+Terminating server!
+# exit    # ./drone_server [J# [J# ./drone_server [J
+Servicing Client
+Name entered: cis551
+Password entered: bad_password
+Wrong User Password
+Client disconnected
+
+Terminating server!
+# exit
+Connection closed by foreign host.
+]0;psahay@ubuntu: ~/Desktop/cis551/HW2/tcp_demopsahay@ubuntu:~/Desktop/cis551/HW2/tcp_demo$ exit
+exit
+
+Script done on Wed 22 Oct 2014 12:29:22 PM EDT
