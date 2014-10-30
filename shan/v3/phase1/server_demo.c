@@ -66,9 +66,12 @@ main( argc, argv, env )
 	     exit( ERR_ACCEPT );
 	    }
 
-
+      /*The file "file" for the username and password is loaded 
+      in RAM using RESTORE and SAVED before exiting. Thats what 
+      those two functions do. */
 	   restore( DATABASE );
 
+     // Service any incoming request 
 	   service(connection_fd,name,value, replyGranted,replyDenied);
 
 	   save( DATABASE );

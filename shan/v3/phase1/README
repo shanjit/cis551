@@ -1,0 +1,77 @@
+Complete Architecture README
++++++++++++++++++++++++++++++
+
+Pre-reading
+===========
+1. http://www.cplusplus.com/reference/cstdio/fputs/ 
+2. http://www.cplusplus.com/reference/cstdio/fgets/
+3. http://www.cplusplus.com/reference/cstdio/fflush/
+4. https://www.cs.bu.edu/teaching/c/file-io/intro/
+5. Why use fprintf and not fputs - http://stackoverflow.com/questions/5690979/fputs-vs-fprintf
+
+
+Basic idea 
+==========
+Two main ideas
+
+1. Tying up a socket file descriptor with a file pointer using fdopen. 
+Eg. server_request = fdopen( sockfd, "w" ); or
+	server_reply = fdopen( sockfd, "r" );
+
+2.
+Write C strings to a file stream using fputs
+Read C strings from a file stream using fgets
+
+The file stream getting the input from the user is the STDIN.
+The file stream printing the output to the user is the STDOUT. 
+
+Be sure to use fflush to print out unformatted strings.
+Client side 
+------------
+The file stream printing to the socket => server_request
+The file stream reading from the socket => server_reply
+
+Server side 
+------------
+The file stream printing to the socket => client
+The file stream reading from the socket => client
+
+
+Client side
+===========
+//
+//
+// Anything sent to the server is server_request
+// Anything got from the server is the server_reply
+//
+//
+
+Input
+-----
+Read from the STDIN (file stream) into the buffer send_buf using fgets. 
+Write the send_buf (C string) to the server_request (file stream) using fputs. 
+fflush(server_request) to send it to the server
+
+Output
+------
+Read from the server_reply (file stream) into the buffer recv_buf using fgets.
+Write the recv_buf (C string) to the STDOUT (user screen) using fprintf. (why not fputs ? See prereading)
+
+
+Server side
+===========
+//
+// Anything sent to the client is the client_reply
+// Anything got from the client is the client_request
+//
+
+Service Input from Client
+-------------------------
+Read from the STDIN (file stream) into the buffer send_buf using fgets. 
+Write the send_buf (C string) to the server_request (file stream) using fputs. 
+fflush(server_request) to send it to the server
+
+Send data back to the client
+----------------------------
+Read from the server_reply (file stream) into the buffer recv_buf using fgets.
+Write the recv_buf (C string) to the STDOUT (user screen) using fprintf. (why not fputs ? See prereading)

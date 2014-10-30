@@ -1,8 +1,17 @@
 //
 // Anything sent to the server is server_request
 // Anything got from the server is the server_reply
-//
-//
+
+
+
+/*This is the client file for phase 1 of homework 2 for CIS 551 Fall 2014
+
+Contributors:
+Shanjit Singh Jajmann
+Nachiket Nanadikar
+Ameya Moore
+*/
+
 /*
  * demo client
  * It provides an associative memory for strings
@@ -28,17 +37,29 @@
 
 main( int argc, char *argv[] )
 {
+  // Define the receive buffer
   char recv_buf[BUFSIZE];
+
+  // Define the send buffer
   char send_buf[BUFSIZE];
+
+  // The replies sent by the server. These strings are just used for comparison
   char *replyGranted = "Access Granted\n";
   char *replyDenied  = "Access Denied. Terminating connection\n";
 
+?  // The buffer size for 
   size_t max_buf = BUFSIZE;
+ 
+  // Socket Stuff goes here
   int sockfd;
   struct sockaddr_in servaddr;
+
+  // Create a file pointer to keep track of the file being accessed. 
+  // Two separate pointers are made for the server_request and server_reply
+  // See https://www.cs.bu.edu/teaching/c/file-io/intro/ for usage. 
   FILE *server_request, *server_reply;
 
-  /* Check if invoked correctly */
+  // See if the ip address entered
   if( argc != 2 )
     {
       fprintf(stderr, "Usage: %s <IP address>\n", argv[0] );
@@ -72,12 +93,15 @@ main( int argc, char *argv[] )
     }
 
   /* setup the interfaces between the new socket and stdio system */
+  // server_requet is anything you request from the server
   server_request = fdopen( sockfd, "w" );
   if( server_request == (FILE *) NULL )
     {
       perror( "fdopen of stream for server requests" );
       exit( 2 );
     }
+
+  // server_reply is the reply of the server 
   server_reply = fdopen( sockfd, "r" );
   if( server_reply == (FILE *) NULL )
     {
@@ -93,18 +117,24 @@ main( int argc, char *argv[] )
     printf("Connection established\n");
     while (1) {
       // after the connection gets established I am going to wait for the server to send me the request to authenticate my username and password.
+      // The server is going to be the one to initiate the conversation by asking for the username and password from the client
       if(fgets(recv_buf,BUFSIZE,server_reply)!=NULL) {
-        // print everytime the server sends anything.
         fprintf(stdout,"Server: %s", recv_buf);
-        // why not flush ? or is it that flush only when outputting to the file or the socket and not to the standard output.
         if(strcmp(recv_buf,replyGranted)==0){
+          //
+          //
+          //
           // This is the User interface showed to the client.
           // Add modifications of MAC id here
+          //
+          //
           printf("Add or update user by: user,password\n");
           printf("Delete user by: delete$user\n");
-          break; // does this break out of the while or the if ?
+          break; // break out from while (1)
+        
         } else if(strcmp(recv_buf,replyDenied)==0) {
-          // Close the server_request and the server_request and the socket if teh request is denied.
+          // request is denied => Close the server_request and the server_request and the socket
+          // close the server_request, server_reply file descriptors if auth failed.
           fclose( server_request );
           fclose( server_reply );
           close( sockfd);
@@ -122,15 +152,13 @@ main( int argc, char *argv[] )
       }
     }
 
-// comes here if you get authenticated.
-  // basically making a shell type of interface while putting a > on the terminal everytime you type.
-    // another while loop in practice basically.
+  // Run this when authenticated.
+  // make a prompt with '>' 
   for( putchar('>');
      (fgets( send_buf, BUFSIZE, stdin ) != NULL );
       putchar('>'))
   {
-    //Upon successful completion, fputs() shall return a non-negative number. Otherwise, it shall return EOF, set an error indicator for the stream, [CX] [Option Start]  and set errno to indicate the error. [Option End]
-
+      //Upon successful completion, fputs() shall return a non-negative number. Otherwise, it shall return EOF, set an error indicator for the stream, [CX] [Option Start]  and set errno to indicate the error. [Option End]
       if( fputs( send_buf, server_request ) == EOF )
       {
         perror( "write failure to associative memory at server" );
