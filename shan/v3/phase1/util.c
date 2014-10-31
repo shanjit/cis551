@@ -189,7 +189,7 @@ char *file;
 	  if( (ptr = find_equals(line) ) > 0 )
 	    {
 	      *ptr = EOS;
-	      insert(structsave(line),strsave(++ptr));
+	      insert(strsave(line),strsave(++ptr));
 	    }
 	}
       fclose( db );
@@ -230,3 +230,4 @@ char *name;
   returnstr = "User not found\n";
   return returnstr;
 }
+

@@ -47,7 +47,7 @@ main( int argc, char *argv[] )
   char *replyGranted = "Access Granted\n";
   char *replyDenied  = "Access Denied. Terminating connection\n";
 
-?  // The buffer size for 
+
   size_t max_buf = BUFSIZE;
  
   // Socket Stuff goes here
