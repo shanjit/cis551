@@ -238,7 +238,8 @@ int create_service()
 
   bzero( &servaddr, sizeof(servaddr) );
   servaddr.sin_family = AF_INET;
-  servaddr.sin_addr.s_addr = htonl( INADDR_ANY );
+  char buffer_ip[20] = "192.168.1.123";
+  servaddr.sin_addr.s_addr = inet_addr(buffer_ip);
   servaddr.sin_port = htons( CIS551_PORT );
 
   if( bind( listenfd, (SA *) &servaddr, sizeof(servaddr) ) < 0 )
