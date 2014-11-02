@@ -188,7 +188,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
       char *ptr;
 
       // now when you get something from the client
-      if( fgets( recv_buf, BUFSIZE, client_req ) != NULL ){
+      if( recvFromClient(recv_buf, client_req) != 0 ){
 
         /*Exit command*/
         if(!strcmp(recv_buf,"exit\n")){
