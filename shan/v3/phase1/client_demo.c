@@ -106,8 +106,7 @@ main( int argc, char *argv[] )
           // Add modifications of MAC id here
           //
           //
-          printf("Add or update user by: user,password\n");
-          printf("Delete user by: delete$user\n");
+          printf("Add or Update user by: user:password\n");
           break; // break out from while (1)
         
         } else if(strcmp(recv_buf,evil)==0) {

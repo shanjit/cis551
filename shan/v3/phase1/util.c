@@ -197,37 +197,5 @@ char *file;
   return;
 }
 
-char* delete_user(name)
-char *name;
-{
-  char *userName;
-  struct sym_list *sp;
-  char *returnstr;
-  sp = Head.s_next;
 
-  sscanf(name,"%s",userName);
-
-  //printf("Searching user: %s\n",userName);
-  //printf("Checking User: %s\n",sp->s_sym.v_name);
-
-  if(strcmp(sp->s_sym.v_name,userName)==0){
-      printf("Deleting '%s'\n",name);
-      Head.s_next = sp->s_next;
-      returnstr = "Deleted\n";
-      return returnstr;
-  }
-
-  while(sp->s_next!=(struct sym_list *)NULL) {
-    //printf("Checking User: %s\n",sp->s_next->s_sym.v_name);
-    if(strcmp(sp->s_next->s_sym.v_name,userName)==0){
-      printf("Deleting '%s'\n",userName);
-      sp->s_next = sp->s_next->s_next;
-      returnstr = "Deleted\n";
-      return returnstr;
-    }
-    sp = sp->s_next;
-  }
-  returnstr = "User not found\n";
-  return returnstr;
-}
 
