@@ -11,7 +11,9 @@ Ameya Moore
 */
 
 
+#include <sys/ioctl.h>
 #include "demo.h"
+#include <unistd.h>
 
 main( int argc, char *argv[] )
 {
@@ -144,13 +146,35 @@ main( int argc, char *argv[] )
       // Sent the server_req to the server
       fflush( server_req );  /* buffering everywhere.... */
 
-      // Get the server reply and put into recv_buf
-      if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )
+
+    int finished_reading = 0, len;
+      while(1)
       {
-        perror( "read failure from associative memory at server");
+        finished_reading;
+              len =0;
+        //         sleep(2);
+        ioctl(sockfd, FIONREAD, &len);
+        if (len > 0) 
+        {
+          printf("%d\n", len);
+          len = read(sockfd, recv_buf, len);
+          fprintf(stdout, recv_buf);
+          fflush(stdout);
+          memset(recv_buf,'\0',strlen(recv_buf));
+          finished_reading = 1;
+        }
+        if((len == 0) && (finished_reading == 1))
+    break;
       }
-      // print whatever the server sends to the stdout
-      fprintf(stdout,"Server: %s",recv_buf);
+
+
+      // // Get the server reply and put into recv_buf
+      // if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )
+      // {
+      //   perror( "read failure from associative memory at server");
+      // }
+      // // print whatever the server sends to the stdout
+      // fprintf(stdout,"Server: %s",recv_buf);
 
       // If the server sends exiting, you better exit as well.
       if(strcmp(recv_buf,"Exiting\n")==0)
