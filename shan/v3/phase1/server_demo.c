@@ -220,18 +220,26 @@ service( int fd, char *name, char *password, char *good, char *evil)
         }
 
         /*Change mac id*/
-
+        
 
         /*Execute Shell and pass recv_buf to the shell */
         else {
 
           char command[100];
+          
+          printf("%s", recv_buf);
+          
+          size_t ln = strlen(recv_buf) - 1;
+          if (recv_buf[ln] == '\n')
+          recv_buf[ln] = '\0';    
+          
           strcpy(command, recv_buf);
-          strcat(command, ">> command_out");
-
+          strcat(command, "> command_out");
           printf("%s", command);
-
           system(command);
+          memset(command,0,strlen(command));
+
+          // Now read from the file command_out and send to the client. 
 
           sendToClient("Incorrect Usage. See README\n", client_rep);
 
