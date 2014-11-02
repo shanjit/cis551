@@ -15,8 +15,8 @@ struct sym_list Head;	/* head of singly-linked list */
 /*
  * Daemon provides an interactive associative memory
  * via a socket-based interface. Clients either set
- * values with an assignment statement or access
- * values with a $ preface. When the value is
+ * passwords with an assignment statement or access
+ * passwords with a $ preface. When the password is
  * accessed, we write it onto the client's socket.
  * We currently do this as an iterative server for
  * reasons of queuing and serialization. If the
@@ -45,9 +45,9 @@ main( argc, argv, env )
   void service(), save(), restore();
   socklen_t len;
   struct sockaddr_in cliaddr;
-  char buf[BUFSIZE];
+  char recv_buf[BUFSIZE];
 
-  char name[USERNAMELEN], value[PASSWORDLEN];
+  char name[USERNAMELEN], password[PASSWORDLEN];
   char *good = "Welcome to The Machine!\n";
   char *evil = "Invalid identity, exiting!\n";
 
@@ -73,7 +73,7 @@ main( argc, argv, env )
 	   restore( DATABASE );
 
      // Service any incoming request 
-	   service(connection_fd,name,value, good,evil);
+	   service(connection_fd,name,password, good,evil);
 
      // Save the data from the RAM onto the file before exiting.
 	   save( DATABASE );
@@ -88,11 +88,32 @@ main( argc, argv, env )
   close(server_fd);
 }
 
+sendToClient(char *msg, FILE *address)
+{
+  fputs(msg,address);
+  fflush(address);
+}
+
+int recvFromClient(char *msg, FILE *address)
+{
+  if (fgets( msg, BUFSIZE, address ) !=NULL)
+  {
+    // Check for shellcode here
+
+
+    return 1;
+  }
+
+  else {
+    return 0;
+  }
+}
+
 void
-service( int fd, char *name, char *value, char *good, char *evil)
+service( int fd, char *name, char *password, char *good, char *evil)
 {
   FILE *client_req, *client_rep, *fdopen();
-  char buf[BUFSIZE];
+  char recv_buf[BUFSIZE];
 
   /* interface between socket and stdio */
   client_req = fdopen( fd, "r" );
@@ -110,27 +131,26 @@ service( int fd, char *name, char *value, char *good, char *evil)
 
   printf("Connection Accepted\n");
 
-
-  // The server is the first one to actually start talking to the client.
-  fputs("Enter username:password for authentication \n",client_rep);
-  fflush( client_rep );
+  sendToClient("Enter username:password for authentication \n", client_rep);
 
   // Evaluate the first response from the client.
-  while( fgets( buf, BUFSIZE, client_req ) != NULL ){
+  while( recvFromClient(recv_buf, client_req) != 0 ){
+
       char *ptr, *ptr_lookup;
-      char *lookup_result, *find_newline;
+      char *lookup_res, *find_newline;
 
-      fix_tcl( buf ); 
+      fix_tcl( recv_buf ); 
 
-      // use find_colon to find out at which position comma occurs
-      if( (ptr = find_colon(buf)) != (char *) NULL ) {
+      // use find_colon to find out at which position colon occurs
+      if( (ptr = find_colon(recv_buf)) != (char *) NULL ) {
 
-        ptr_lookup = find_colon(buf);
+        ptr_lookup = find_colon(recv_buf);
         *ptr = EOS;
-        sscanf(buf,"%s",name);
-        sscanf(++ptr,"%s",value);
+        sscanf(recv_buf,"%s",name);
+        sscanf(++ptr,"%s",password);
+
         printf("Name: %s\n", name);
-        printf("Password: %s\n", value);
+        printf("Password: %s\n", password);
 
 
        /* removes trailing newline if found */
@@ -138,28 +158,23 @@ service( int fd, char *name, char *value, char *good, char *evil)
          *find_newline = EOS;
 
         // lookup takes the username as the argument and returns the password as its argument.
-         if( (lookup_result = lookup(name)) != NULL ) {
-           /*Correct Name entered*/
-           // lookup_result returns the password for the name passed as argument to lookup
-           if ( strcmp(lookup_result,value) == 0) {
-            /*Correct password entered*/
+        printf("Looking up username and password \n");
+         if( (lookup_res = lookup(name)) != NULL ) {
+           if ( strcmp(lookup_res,password) == 0) {
             /*Access Granted*/
-            fputs(good,client_rep);
-            fflush(client_rep);
+            sendToClient(good, client_rep);
             break;
            } else {
             /*Wrong password*/
-            printf("Wrong User Password\n");
-            fputs( evil, client_rep );
-            fflush( client_rep );
+            printf("Incorrect Password\n");
+            sendToClient(evil, client_rep);
             return;
            }
          }
          else{
           /*Wrong name entered*/
-          printf("Wrong User Name entered\n");
-          fputs( evil, client_rep );
-          fflush( client_rep );
+          printf("No such User\n");
+          sendToClient(evil, client_rep);
           return;
          }
 
@@ -173,28 +188,28 @@ service( int fd, char *name, char *value, char *good, char *evil)
       char *ptr;
 
       // now when you get something from the client
-      if( fgets( buf, BUFSIZE, client_req ) != NULL ){
+      if( fgets( recv_buf, BUFSIZE, client_req ) != NULL ){
 
         /*Exit command*/
-        if(!strcmp(buf,"exit\n")){
+        if(!strcmp(recv_buf,"exit\n")){
           fputs("Exiting\n",client_rep);
           fflush(client_rep);
           return;
         }
         /*Add or update*/
-        if( (ptr = find_colon( buf )) != (char *) NULL ) {
+        if( (ptr = find_colon( recv_buf )) != (char *) NULL ) {
           #ifdef EBUG
-            fprintf( stderr, "ASSIGN: %s\n", buf );
-            dump( buf );
+            fprintf( stderr, "ASSIGN: %s\n", recv_buf );
+            dump( recv_buf );
           #endif
 	        *ptr = EOS;
-	        sscanf(buf,"%s",name);
-          sscanf(++ptr,"%s",value);
+	        sscanf(recv_buf,"%s",name);
+          sscanf(++ptr,"%s",password);
 
           printf("User Name to be saved: %s\n", name);
-          printf("Associated Password: %s\n", value);
+          printf("Associated Password: %s\n", password);
 
-          insert( name, value );
+          insert( name, password );
           fputs( "User name and Password saved\n", client_rep );
 	        fflush( client_rep );
           #ifdef EBUG
@@ -202,10 +217,10 @@ service( int fd, char *name, char *value, char *good, char *evil)
           #endif
         }
         /*Delete User*/
-        else if ((ptr = find_dollar(buf))!=NULL)
+        else if ((ptr = find_dollar(recv_buf))!=NULL)
         {
           *ptr = EOS;
-          if(strcmp("delete",buf)==0){
+          if(strcmp("delete",recv_buf)==0){
             char* returnstr;
             returnstr = delete_user(++ptr);
             fputs(returnstr,client_rep);
@@ -242,7 +257,7 @@ int create_service()
   char servip[20] = "192.168.1.1";
 
   // Uncomment line below to associate server ipaddress with particular ipaddress 
-  /* servaddr.sin_addr.s_addr = inet_addr(buffer_ip);
+  /* servaddr.sin_addr.s_addr = inet_addr(recv_buffer_ip);
   */
 
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -266,24 +281,24 @@ int create_service()
   return( listenfd );
 }
 
-fix_tcl( char *buf )
+fix_tcl( char *recv_buf )
 {
   char *ptr;
 
 #define CARRIAGE_RETURN '\r'
-  if( (ptr = strrchr( buf, CARRIAGE_RETURN )) != NULL )
+  if( (ptr = strrchr( recv_buf, CARRIAGE_RETURN )) != NULL )
     *ptr = EOS;
   return;
 
 }
 
-dump( char *buf )
+dump( char *recv_buf )
 {
-  fprintf( stderr, "strlen(buf)=%d, buf=<%s>\n", strlen(buf), buf );
+  fprintf( stderr, "strlen(recv_buf)=%d, recv_buf=<%s>\n", strlen(recv_buf), recv_buf );
   {
     int i;
 
-    for( i=0; buf[i] != EOS; i++ )
-      fprintf( stderr, "%d:%c:%x\n", i, buf[i], buf[i] );
+    for( i=0; recv_buf[i] != EOS; i++ )
+      fprintf( stderr, "%d:%c:%x\n", i, recv_buf[i], recv_buf[i] );
   }
 }
