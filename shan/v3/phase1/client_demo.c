@@ -1,8 +1,6 @@
 //
-// Anything sent to the server is server_request
-// Anything got from the server is the server_reply
-
-
+// Anything sent to the server is server_req
+// Anything got from the server is the server_rep
 
 /*This is the client file for phase 1 of homework 2 for CIS 551 Fall 2014
 
@@ -12,26 +10,6 @@ Nachiket Nanadikar
 Ameya Moore
 */
 
-/*
- * demo client
- * It provides an associative memory for strings
- * strings are named with an assignment, e.g.,
- * a=mary had a little lamb
- * They are retrieved by used of their name prepended by a '$' character
- * presented to the prompt ('>'), e.g.,
- * >$a
- * mary had a little lamb
- * >
- *
- * The client passes the strings input to a server, the IP address of
- * which is specified on the command line, e.g..
- * $ client_demo 127.0.0.1
- * The server stores the assigned values into an internal
- * data structure, which it makes persistent using a file.
- *
- * There's a certain amount of overhead in using stdio and
- * sockets, particularly buffer management with fflush() and so forth.
- */
 
 #include "demo.h"
 
@@ -44,9 +22,9 @@ main( int argc, char *argv[] )
   char send_buf[BUFSIZE];
 
   // The replies sent by the server. These strings are just used for comparison
-  char *replyGranted = "Access Granted\n";
-  char *replyDenied  = "Access Denied. Terminating connection\n";
 
+  char *good = "Welcome to The Machine!\n";
+  char *evil = "Invalid identity, exiting!\n";
 
   size_t max_buf = BUFSIZE;
  
@@ -55,9 +33,9 @@ main( int argc, char *argv[] )
   struct sockaddr_in servaddr;
 
   // Create a file pointer to keep track of the file being accessed. 
-  // Two separate pointers are made for the server_request and server_reply
+  // Two separate pointers are made for the server_req and server_rep
   // See https://www.cs.bu.edu/teaching/c/file-io/intro/ for usage. 
-  FILE *server_request, *server_reply;
+  FILE *server_req, *server_rep;
 
   // See if the ip address entered
   if( argc != 2 )
@@ -94,16 +72,16 @@ main( int argc, char *argv[] )
 
   /* setup the interfaces between the new socket and stdio system */
   // server_requet is anything you request from the server
-  server_request = fdopen( sockfd, "w" );
-  if( server_request == (FILE *) NULL )
+  server_req = fdopen( sockfd, "w" );
+  if( server_req == (FILE *) NULL )
     {
       perror( "fdopen of stream for server requests" );
       exit( 2 );
     }
 
-  // server_reply is the reply of the server 
-  server_reply = fdopen( sockfd, "r" );
-  if( server_reply == (FILE *) NULL )
+  // server_rep is the reply of the server 
+  server_rep = fdopen( sockfd, "r" );
+  if( server_rep == (FILE *) NULL )
     {
       perror( "fdopen of stream for server replies" );
       exit( 3 );
@@ -118,9 +96,9 @@ main( int argc, char *argv[] )
     while (1) {
       // after the connection gets established I am going to wait for the server to send me the request to authenticate my username and password.
       // The server is going to be the one to initiate the conversation by asking for the username and password from the client
-      if(fgets(recv_buf,BUFSIZE,server_reply)!=NULL) {
+      if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {
         fprintf(stdout,"Server: %s", recv_buf);
-        if(strcmp(recv_buf,replyGranted)==0){
+        if(strcmp(recv_buf,good)==0){
           //
           //
           //
@@ -132,11 +110,11 @@ main( int argc, char *argv[] )
           printf("Delete user by: delete$user\n");
           break; // break out from while (1)
         
-        } else if(strcmp(recv_buf,replyDenied)==0) {
-          // request is denied => Close the server_request and the server_request and the socket
-          // close the server_request, server_reply file descriptors if auth failed.
-          fclose( server_request );
-          fclose( server_reply );
+        } else if(strcmp(recv_buf,evil)==0) {
+          // request is denied => Close the server_req and the server_req and the socket
+          // close the server_req, server_rep file descriptors if auth failed.
+          fclose( server_req );
+          fclose( server_rep );
           close( sockfd);
           // exit the program
           exit( 0 );
@@ -145,8 +123,8 @@ main( int argc, char *argv[] )
         if (fgets( send_buf, BUFSIZE, stdin ) != NULL) {
           // Get input from the standard input and put it into send_buf,
           // put this as server request and send it to the server.
-          fputs(send_buf,server_request);
-          fflush(server_request);
+          fputs(send_buf,server_req);
+          fflush(server_req);
 
         }
       }
@@ -159,16 +137,16 @@ main( int argc, char *argv[] )
       putchar('>'))
   {
       //Upon successful completion, fputs() shall return a non-negative number. Otherwise, it shall return EOF, set an error indicator for the stream, [CX] [Option Start]  and set errno to indicate the error. [Option End]
-      if( fputs( send_buf, server_request ) == EOF )
+      if( fputs( send_buf, server_req ) == EOF )
       {
         perror( "write failure to associative memory at server" );
       }
 
-      // Sent the server_request to the server
-      fflush( server_request );  /* buffering everywhere.... */
+      // Sent the server_req to the server
+      fflush( server_req );  /* buffering everywhere.... */
 
       // Get the server reply and put into recv_buf
-      if( fgets( recv_buf, BUFSIZE, server_reply ) == NULL )
+      if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )
       {
         perror( "read failure from associative memory at server");
       }
@@ -181,8 +159,8 @@ main( int argc, char *argv[] )
   }
 
   /* shut things down */
-  fclose( server_request );
-  fclose( server_reply );
+  fclose( server_req );
+  fclose( server_rep );
   close( sockfd);
 
   exit( 0 );

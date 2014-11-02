@@ -1,0 +1,9 @@
+Client
+
+
+-1 => arguments incorrect. 
+0 => incorrect ip address. 
+5 => fdopen server_req
+6 => fdopen server_rep
+420 => auth failure
+111 => Exit Now 

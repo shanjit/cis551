@@ -1,9 +1,11 @@
 #define BUFSIZE 4096
 #define MAXLINE 200
 #define MAX_SYMS 64
+#define USERNAMELEN 127
+#define PASSWORDLEN 127
 
 #define PROMPT '>'
-#define COMMA ','
+#define COLON ':'
 #define DOLLAR '$'
 #define EQUALS '='
 #define NEWLINE '\n'
@@ -11,7 +13,6 @@
 
 #define TRUE 1
 #define FALSE 0
-#define HELL_NOT_FROZEN TRUE
 
 #define SA struct sockaddr
 
@@ -26,7 +27,7 @@
 
 #define find_equals(_s) strchr(_s, EQUALS)
 #define find_dollar(_s) strchr(_s, DOLLAR)
-#define	find_comma(_s) strchr(_s, COMMA)
+#define	find_colon(_s) strchr(_s, COLON)
 
 void *malloc();
 

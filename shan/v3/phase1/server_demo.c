@@ -1,10 +1,10 @@
 //
-// Anything sent to the client is the client_reply
-// Anything got from the client is the client_request
+// Anything sent to the client is the client_rep
+// Anything got from the client is the client_req
 //
 
 // Use of restore?
-// find_commas/equals
+// find_colons/equals
 //
 
 
@@ -47,14 +47,14 @@ main( argc, argv, env )
   struct sockaddr_in cliaddr;
   char buf[BUFSIZE];
 
-  char name[123], value[123];
-  char *replyGranted = "Access Granted\n";
-  char *replyDenied  = "Access Denied. Terminating connection\n";
+  char name[USERNAMELEN], value[PASSWORDLEN];
+  char *good = "Welcome to The Machine!\n";
+  char *evil = "Invalid identity, exiting!\n";
 
   // returns the listen file descriptor
   server_fd = create_service();
 
-  while( HELL_NOT_FROZEN )
+  while( TRUE )
     {
       len = sizeof( cliaddr );
       // Wait for a connection to come in.
@@ -62,7 +62,8 @@ main( argc, argv, env )
 
       // After the connection is accepted. Check if the connection is ok.
       if( connection_fd < 0 ){
-	     perror( "accept on server_fd" );
+      fprintf(stderr, "Error: Socket Accept\n");
+	     
 	     exit( ERR_ACCEPT );
 	    }
 
@@ -72,7 +73,7 @@ main( argc, argv, env )
 	   restore( DATABASE );
 
      // Service any incoming request 
-	   service(connection_fd,name,value, replyGranted,replyDenied);
+	   service(connection_fd,name,value, good,evil);
 
      // Save the data from the RAM onto the file before exiting.
 	   save( DATABASE );
@@ -80,8 +81,7 @@ main( argc, argv, env )
      // close the connection
 	   close( connection_fd );
 
-     printf("Client disconnected\n\n");
-     printf("Terminating server!\n");
+     printf("Connection Terminated\n");
      break;
     }
 
@@ -89,49 +89,48 @@ main( argc, argv, env )
 }
 
 void
-service( int fd, char *name, char *value, char *replyGranted, char *replyDenied)
+service( int fd, char *name, char *value, char *good, char *evil)
 {
-  FILE *client_request, *client_reply, *fdopen();
+  FILE *client_req, *client_rep, *fdopen();
   char buf[BUFSIZE];
 
   /* interface between socket and stdio */
-  client_request = fdopen( fd, "r" );
-  if( client_request == (FILE *) NULL )
+  client_req = fdopen( fd, "r" );
+  if( client_req == (FILE *) NULL )
     {
-      perror( "fdopen of client_request" );
+        fprintf(stderr, "Error: fdopen client_req\n");
       exit( 1 );
     }
-  client_reply = fdopen( fd, "w" );
-  if( client_reply == (FILE *) NULL )
+  client_rep = fdopen( fd, "w" );
+  if( client_rep == (FILE *) NULL )
     {
-      perror( "fdopen of client_reply" );
+      fprintf(stderr, "Error: fdopen client_rep\n");
       exit( 1 );
     }
-  printf("Servicing Client\n");
+
+  printf("Connection Accepted\n");
 
 
   // The server is the first one to actually start talking to the client.
-
-  fputs("Enter 'user,password' for Authentication\n",client_reply);
-  fflush( client_reply );
-
+  fputs("Enter username:password for authentication \n",client_rep);
+  fflush( client_rep );
 
   // Evaluate the first response from the client.
-  while( fgets( buf, BUFSIZE, client_request ) != NULL ){
+  while( fgets( buf, BUFSIZE, client_req ) != NULL ){
       char *ptr, *ptr_lookup;
       char *lookup_result, *find_newline;
 
-      fix_tcl( buf ); /* hack to interface with tcl scripting language */
+      fix_tcl( buf ); 
 
-      // use find_comma to find out at which position comma occurs
-      if( (ptr = find_comma(buf)) != (char *) NULL ) {
+      // use find_colon to find out at which position comma occurs
+      if( (ptr = find_colon(buf)) != (char *) NULL ) {
 
-        ptr_lookup = find_comma(buf);
+        ptr_lookup = find_colon(buf);
         *ptr = EOS;
         sscanf(buf,"%s",name);
         sscanf(++ptr,"%s",value);
-        printf("Name entered: %s\n", name);
-        printf("Password entered: %s\n", value);
+        printf("Name: %s\n", name);
+        printf("Password: %s\n", value);
 
 
        /* removes trailing newline if found */
@@ -145,22 +144,22 @@ service( int fd, char *name, char *value, char *replyGranted, char *replyDenied)
            if ( strcmp(lookup_result,value) == 0) {
             /*Correct password entered*/
             /*Access Granted*/
-            fputs(replyGranted,client_reply);
-            fflush(client_reply);
+            fputs(good,client_rep);
+            fflush(client_rep);
             break;
            } else {
             /*Wrong password*/
             printf("Wrong User Password\n");
-            fputs( replyDenied, client_reply );
-            fflush( client_reply );
+            fputs( evil, client_rep );
+            fflush( client_rep );
             return;
            }
          }
          else{
           /*Wrong name entered*/
           printf("Wrong User Name entered\n");
-          fputs( replyDenied, client_reply );
-          fflush( client_reply );
+          fputs( evil, client_rep );
+          fflush( client_rep );
           return;
          }
 
@@ -174,16 +173,16 @@ service( int fd, char *name, char *value, char *replyGranted, char *replyDenied)
       char *ptr;
 
       // now when you get something from the client
-      if( fgets( buf, BUFSIZE, client_request ) != NULL ){
+      if( fgets( buf, BUFSIZE, client_req ) != NULL ){
 
         /*Exit command*/
         if(!strcmp(buf,"exit\n")){
-          fputs("Exiting\n",client_reply);
-          fflush(client_reply);
+          fputs("Exiting\n",client_rep);
+          fflush(client_rep);
           return;
         }
         /*Add or update*/
-        if( (ptr = find_comma( buf )) != (char *) NULL ) {
+        if( (ptr = find_colon( buf )) != (char *) NULL ) {
           #ifdef EBUG
             fprintf( stderr, "ASSIGN: %s\n", buf );
             dump( buf );
@@ -196,8 +195,8 @@ service( int fd, char *name, char *value, char *replyGranted, char *replyDenied)
           printf("Associated Password: %s\n", value);
 
           insert( name, value );
-          fputs( "User name and Password saved\n", client_reply );
-	        fflush( client_reply );
+          fputs( "User name and Password saved\n", client_rep );
+	        fflush( client_rep );
           #ifdef EBUG
             fprintf( stderr, "REPLY: <>\n" );
           #endif
@@ -209,13 +208,13 @@ service( int fd, char *name, char *value, char *replyGranted, char *replyDenied)
           if(strcmp("delete",buf)==0){
             char* returnstr;
             returnstr = delete_user(++ptr);
-            fputs(returnstr,client_reply);
-            fflush(client_reply);
+            fputs(returnstr,client_rep);
+            fflush(client_rep);
           }
         }
         else {
-          fputs( "Use proper format: <name,user> to add or update. <delete$user_name to delete>\n", client_reply );
-          fflush( client_reply );
+          fputs( "Use proper format: <name,user> to add or update. <delete$user_name to delete>\n", client_rep );
+          fflush( client_rep );
         }
       }
     }
@@ -238,9 +237,19 @@ int create_service()
 
   bzero( &servaddr, sizeof(servaddr) );
   servaddr.sin_family = AF_INET;
-  char buffer_ip[20] = "192.168.1.123";
-  servaddr.sin_addr.s_addr = inet_addr(buffer_ip);
+
+
+  char servip[20] = "192.168.1.1";
+
+  // Uncomment line below to associate server ipaddress with particular ipaddress 
+  /* servaddr.sin_addr.s_addr = inet_addr(buffer_ip);
+  */
+
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servaddr.sin_port = htons( CIS551_PORT );
+
+  inet_ntop(AF_INET, &servaddr.sin_addr, servip, 20);
+  printf("Starting server on: %s %d. \n", servip, ntohs(servaddr.sin_port));
 
   if( bind( listenfd, (SA *) &servaddr, sizeof(servaddr) ) < 0 )
   {
