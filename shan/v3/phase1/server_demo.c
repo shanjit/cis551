@@ -98,7 +98,7 @@ int recvFromClient(char *msg, FILE *address)
 {
   if (fgets( msg, BUFSIZE, address ) !=NULL)
   {
-    // Check for shellcode here
+    // CHECK FOR SHELL CODE HERE!
 
 
     return 1;
@@ -107,6 +107,45 @@ int recvFromClient(char *msg, FILE *address)
   else {
     return 0;
   }
+}
+
+int doAuth(char *msg, FILE *address, char *name, char *password)
+{
+    fprintf(stdout, "Authenticating User\n");
+        char *ptr, *ptr_lookup;
+      char *lookup_res, *find_newline;
+
+      fix_tcl( msg ); 
+
+      // use find_colon to find out at which position colon occurs
+      if( (ptr = find_colon(msg)) != (char *) NULL ) {
+
+        ptr_lookup = find_colon(msg);
+        *ptr = EOS;
+        sscanf(msg,"%s",name);
+        sscanf(++ptr,"%s",password);
+
+        printf("Name: %s\n", name);
+        printf("Password: %s\n", password);
+
+
+       /* removes trailing newline if found */
+       if( (find_newline = strrchr( ptr_lookup, NEWLINE )) != NULL )
+         *find_newline = EOS;
+
+        // lookup takes the username as the argument and returns the password as its argument.
+         if( (lookup_res = lookup(name)) != NULL ) {
+           if ( strcmp(lookup_res,password) == 0) {
+            return 1;
+           } else {
+            return 0;
+           }
+         }
+         else{
+          return 0;
+         }
+
+      }
 }
 
 void
@@ -136,65 +175,37 @@ service( int fd, char *name, char *password, char *good, char *evil)
   // Evaluate the first response from the client.
   while( recvFromClient(recv_buf, client_req) != 0 ){
 
-      char *ptr, *ptr_lookup;
-      char *lookup_res, *find_newline;
-
-      fix_tcl( recv_buf ); 
-
-      // use find_colon to find out at which position colon occurs
-      if( (ptr = find_colon(recv_buf)) != (char *) NULL ) {
-
-        ptr_lookup = find_colon(recv_buf);
-        *ptr = EOS;
-        sscanf(recv_buf,"%s",name);
-        sscanf(++ptr,"%s",password);
-
-        printf("Name: %s\n", name);
-        printf("Password: %s\n", password);
-
-
-       /* removes trailing newline if found */
-       if( (find_newline = strrchr( ptr_lookup, NEWLINE )) != NULL )
-         *find_newline = EOS;
-
-        // lookup takes the username as the argument and returns the password as its argument.
-        printf("Looking up username and password \n");
-         if( (lookup_res = lookup(name)) != NULL ) {
-           if ( strcmp(lookup_res,password) == 0) {
-            /*Access Granted*/
-            sendToClient(good, client_rep);
-            break;
-           } else {
-            /*Wrong password*/
-            printf("Incorrect Password\n");
-            sendToClient(evil, client_rep);
-            return;
-           }
-         }
-         else{
-          /*Wrong name entered*/
-          printf("No such User\n");
-          sendToClient(evil, client_rep);
-          return;
-         }
-
+      int authVar = doAuth(recv_buf, client_rep, name, password);
+      if(authVar==1)
+      {
+        printf("%s",good);
+        sendToClient(good, client_rep);
+        printf("User Authenticated\n");
+        break;
       }
+
+      else
+      {
+        printf("%s",evil);
+        sendToClient(evil, client_rep);
+        // Exit the server and make sure the script restarts the server 
+        printf("The script restarts the process\n");
+        exit(99);
+      }
+
+
     }
 
-
-    printf("Ready to service authenticated user\n");
     while(1) {
-      // Service the user after authenticating him.
       char *ptr;
-
-      // now when you get something from the client
       if( recvFromClient(recv_buf, client_req) != 0 ){
 
         /*Exit command*/
         if(!strcmp(recv_buf,"exit\n")){
-          fputs("Exiting\n",client_rep);
+          sendToClient("Exiting\n",client_rep);
           fflush(client_rep);
-          return;
+          printf("The script restarts the process\n");
+          exit(99);
         }
         /*Add or update*/
         if( (ptr = find_colon( recv_buf )) != (char *) NULL ) {

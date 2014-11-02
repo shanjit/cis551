@@ -66,7 +66,7 @@ main( int argc, char *argv[] )
   /* attempt to make the actual connection */
   if( connect(sockfd, (SA *) &servaddr, sizeof(servaddr)) < 0 )
     {
-      perror( "connect to associative memory at server" );
+      fprintf(stderr, "Connection Refused, Server is down\n");
       exit( 100 );
     }
 

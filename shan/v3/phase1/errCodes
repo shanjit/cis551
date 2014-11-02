@@ -7,3 +7,5 @@ Client
 6 => fdopen server_rep
 420 => auth failure
 111 => Exit Now 
+
+99 => exit called from client just restart the process.
