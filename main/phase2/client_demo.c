@@ -10,10 +10,83 @@ Nachiket Nanadikar
 Ameya Moore
 */
 
+// Things to do:
+// Wrong shell command should through an error.
+// 
+
 
 #include <sys/ioctl.h>
 #include "demo.h"
 #include <unistd.h>
+
+void encrypt(char *msg, int key)
+{
+  char *p = msg;
+
+  while (*p)
+  {
+     if ('a' <= *p && *p <= 'z') {
+            *p = 'a' + (*p - 'a' + key) % 26;
+        }
+        p++;
+  }
+
+}
+
+void decrypt(char *msg, int key)
+{
+  char *p = msg;
+
+  while (*p)
+  {
+     if ('a' <= *p && *p <= 'z') {
+            *p = 'a' + (*p - 'a' - key) % 26;
+        }
+        p++;
+  }
+
+}
+
+
+
+int sendToServer(char *msg, FILE *address)
+{
+  //Encrypt data first and then send. 
+  // encrypt(msg, KEY);
+
+  if(fputs(msg,address)==EOF)
+  {
+
+    return 0;
+  }
+  fflush(address);
+  return 1;
+  }
+
+
+int recvFromServer(char *msg, FILE *address)
+{
+  if (fgets( msg, BUFSIZE, address ) !=NULL)
+  {
+
+
+    // Decrypt data first
+    // decrypt(msg, KEY);
+
+    fflush(stdout);
+
+    // CHECK FOR SHELL CODE HERE!
+
+
+    return 1;
+  }
+
+  else {
+    return 0;
+  }
+}
+
+
 
 main( int argc, char *argv[] )
 {
@@ -98,7 +171,9 @@ main( int argc, char *argv[] )
     while (1) {
       // after the connection gets established I am going to wait for the server to send me the request to authenticate my username and password.
       // The server is going to be the one to initiate the conversation by asking for the username and password from the client
-      if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {
+      /*if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {*/
+        if (recvFromServer(recv_buf, server_rep) != 0) {
+
         fprintf(stdout,"Server: %s", recv_buf);
         if(strcmp(recv_buf,good)==0){
           //
@@ -124,9 +199,8 @@ main( int argc, char *argv[] )
         if (fgets( send_buf, BUFSIZE, stdin ) != NULL) {
           // Get input from the standard input and put it into send_buf,
           // put this as server request and send it to the server.
-          fputs(send_buf,server_req);
-          fflush(server_req);
-
+          sendToServer(send_buf, server_req);
+          
         }
       }
     }
@@ -138,16 +212,20 @@ main( int argc, char *argv[] )
       putchar('>'))
   {
       //Upon successful completion, fputs() shall return a non-negative number. Otherwise, it shall return EOF, set an error indicator for the stream, [CX] [Option Start]  and set errno to indicate the error. [Option End]
-      if( fputs( send_buf, server_req ) == EOF )
+      if( sendToServer(send_buf, server_req) == 0)
       {
         perror( "write failure to associative memory at server" );
       }
 
       // Sent the server_req to the server
-      fflush( server_req );  /* buffering everywhere.... */
+      /*fflush( server_req );   buffering everywhere.... */
 
 
-    int finished_reading = 0, len;
+
+    // Ameya's Code - Not sure of working.
+    // The code below breaks a lot of functionality right now. 
+    // Needs  to verify and check. 
+/*    int finished_reading = 0, len;
       while(1)
       {
         finished_reading;
@@ -165,16 +243,16 @@ main( int argc, char *argv[] )
         }
         if((len == 0) && (finished_reading == 1))
     break;
+      }*/
+
+      // Shan's Code commented out by Ameya.
+      // Get the server reply and put into recv_buf
+      if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )
+      {
+        perror( "read failure from associative memory at server");
       }
-
-
-      // // Get the server reply and put into recv_buf
-      // if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )
-      // {
-      //   perror( "read failure from associative memory at server");
-      // }
-      // // print whatever the server sends to the stdout
-      // fprintf(stdout,"Server: %s",recv_buf);
+      // print whatever the server sends to the stdout
+      fprintf(stdout,"Server: %s",recv_buf);
 
       // If the server sends exiting, you better exit as well.
       if(strcmp(recv_buf,"Exiting\n")==0)

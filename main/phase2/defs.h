@@ -11,6 +11,9 @@
 #define NEWLINE '\n'
 #define EOS '\0'
 
+// for the caesar cipher
+#define KEY 1
+
 #define TRUE 1
 #define FALSE 0
 

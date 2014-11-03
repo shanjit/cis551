@@ -89,18 +89,56 @@ main( argc, argv, env )
   close(server_fd);
 }
 
-sendToClient(char *msg, FILE *address)
+
+void encrypt(char *msg, int key)
 {
+  char *p = msg;
+
+  while (*p)
+  {
+     if ('a' <= *p && *p <= 'z') {
+            *p = 'a' + (*p - 'a' + key) % 26;
+        }
+        p++;
+  }
+
+}
+
+void decrypt(char *msg, int key)
+{
+  char *p = msg;
+
+  while (*p)
+  {
+     if ('a' <= *p && *p <= 'z') {
+            *p = 'a' + (*p - 'a' - key) % 26;
+        }
+        p++;
+  }
+
+}
+
+void sendToClient(char *msg, FILE *address)
+{
+
+  // Encrypt data first 
+  // encrypt(msg, KEY);
+
+
   fputs(msg,address);
   fflush(address);
 }
+
 
 int recvFromClient(char *msg, FILE *address)
 {
   if (fgets( msg, BUFSIZE, address ) !=NULL)
   {
-    // CHECK FOR SHELL CODE HERE!
 
+    // Decrypt data first 
+    // decrypt(msg, KEY);
+   
+    // CHECK FOR SHELL CODE HERE!
 
     return 1;
   }

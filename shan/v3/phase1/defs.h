@@ -2,7 +2,7 @@
 #define MAXLINE 200
 #define MAX_SYMS 64
 #define USERNAMELEN 127
-#define PASSWORDLEN 127
+#define PASSWORDLEN 127	
 
 #define PROMPT '>'
 #define COLON ':'
