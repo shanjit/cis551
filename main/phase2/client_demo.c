@@ -247,7 +247,8 @@ main( int argc, char *argv[] )
 
       // Shan's Code commented out by Ameya.
       // Get the server reply and put into recv_buf
-      if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )
+      /*if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )*/
+  if( recvFromServer( recv_buf, server_rep ) == 0 )
       {
         perror( "read failure from associative memory at server");
       }
