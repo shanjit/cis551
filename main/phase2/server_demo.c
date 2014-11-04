@@ -141,10 +141,10 @@ int recvFromClient(char *decrypted, FILE *address)
 
     encrypted[strlen(encrypted)-1] = '\0';
     // Decrypt data first 
-      printf("Cipher Text %s\n", encrypted);
+      /*printf("Cipher Text %s\n", encrypted);*/
     decrypt(encrypted, decrypted);
-    printf("Plain Text %s\n", decrypted);
-    
+    /*printf("Plain Text %s\n", decrypted);
+    */
     // CHECK FOR SHELL CODE HERE!
 	  /*printf("success");*/
     return 1;

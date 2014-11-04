@@ -51,9 +51,9 @@ int sendToServer(char *decrypted, FILE *address)
   char encrypted[BUFSIZE];
   
   //Encrypt data first and then send. 
-  printf("Plain Text %s\n", decrypted);
+  /*printf("Plain Text %s\n", decrypted);*/
   encrypt(decrypted, encrypted);
-  printf("Cipher Text %s\n", encrypted);
+  /*printf("Cipher Text %s\n", encrypted);*/
   strcat(encrypted, "\n");
   if(fputs(encrypted,address)==EOF)
   {
@@ -74,9 +74,9 @@ int recvFromServer(char *decrypted, FILE *address)
   {
     encrypted[strlen(encrypted)-1] = '\0'; 
     // Decrypt data first
-    printf("Cipher Text %s\n", encrypted);
+    /*printf("Cipher Text %s\n", encrypted);*/
     decrypt(encrypted, decrypted);
-    printf("Plain Text %s\n", decrypted);
+    /*printf("Plain Text %s\n", decrypted);*/
 
     fflush(stdout);
 
