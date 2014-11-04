@@ -1,4 +1,4 @@
-#define BUFSIZE 4096
+#define BUFSIZE 65536
 #define MAXLINE 200
 #define MAX_SYMS 64
 #define USERNAMELEN 127
