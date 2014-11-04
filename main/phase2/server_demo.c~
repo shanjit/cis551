@@ -250,6 +250,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Exit command*/
         if(!strcmp(recv_buf,"exit\n")){
+			printf("\nexit!!!!\n");
           sendToClient("Exiting\n",client_rep);
           printf("The script restarts the process\n");
           exit(99);
@@ -257,6 +258,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Add or update*/
         else if( (ptr = find_comma( recv_buf )) != (char *) NULL ) {
+			printf("\nadd\n");
 	        *ptr = EOS;
 	        sscanf(recv_buf,"%s",newname);
           sscanf(++ptr,"%s",newpassword);
@@ -267,20 +269,28 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Add mac id*/
 		else if( (ptr = find_semicolon( recv_buf )) != (char *) NULL ) {
+			printf("\nsemi\n");
 			char msg1[150];
 			strcpy(msg1, "iptables -I INPUT 2 -p tcp --dport ");
 			char *msg2 = " -m mac --mac-source ";
 	        *ptr = EOS;
+			printf("\nsemi2\n");
 			sscanf(recv_buf,"%s",mac);
+			printf("\nsemi3\n");
 			sscanf(++ptr,"%s",port);
+			printf("port: %s\n", port);
 			strcat(msg1, port);
+			printf("\nsemi5\n");
 			strcat(msg1, msg2);
+			printf("\nsemi6\n");
 			strcat(msg1, mac);
+			printf("\nmsg : %s\n", msg1);
 			system(msg1);
 			system("iptables-save > iptables-rules");
         }
 		
 		else if( (ptr = find_hash( recv_buf )) != (char *) NULL ) {
+			printf("delete");
 			char msg1[150];
 			strcpy(msg1, "iptables -D INPUT -p tcp --dport ");
 			char *msg2 = " -m mac --mac-source ";
@@ -297,6 +307,8 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Execute Shell and pass recv_buf to the shell */
         else {
+
+     printf("\n\nshell1\n");
 	   output_of_command_fp = fopen("temp_output_of_command.txt", "w");
 	   output_of_command_fd = fileno(output_of_command_fp);
 	   saved_stdout = dup(1);
