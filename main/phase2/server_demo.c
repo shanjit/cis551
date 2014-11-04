@@ -122,9 +122,9 @@ void sendToClient(char *decrypted, FILE *address)
   char encrypted[BUFSIZE];
   
   // Encrypt data first 
-  printf("Plain Text %s\n", decrypted);
+  /*printf("Plain Text %s\n", decrypted);*/
   encrypt(decrypted,encrypted);
-  printf("Cipher Text %s\n", encrypted);
+  /*printf("Cipher Text %s\n", encrypted);*/
   strcat(encrypted, "\n");
   fputs(encrypted,address);
   fflush(address);
@@ -141,7 +141,7 @@ int recvFromClient(char *decrypted, FILE *address)
 
     encrypted[strlen(encrypted)-1] = '\0';
     // Decrypt data first 
-    printf("Cipher Text %s\n", encrypted);
+      printf("Cipher Text %s\n", encrypted);
     decrypt(encrypted, decrypted);
     printf("Plain Text %s\n", decrypted);
     
