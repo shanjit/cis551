@@ -19,44 +19,47 @@ Ameya Moore
 #include "demo.h"
 #include <unistd.h>
 
-void encrypt(char *msg, int key)
+
+void encrypt(char*str)
 {
-  char *p = msg;
-
-  while (*p)
+  int n=0;
+  char *p=str,
+     q[MAXSIZE];
+  
+  while(*p)
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' + key) % 26;
-        }
-        p++;
+   q[n]=(*p + (char)3);
+   n++; p++;
   }
-
+  q[n++]='\0';
+  memcpy(str,q,n);
 }
-
-void decrypt(char *msg, int key)
+char * decrypt(char*str)
 {
-  char *p = msg;
+  int n=0;
+  char *p=str,
+     q[MAXSIZE];
 
-  while (*p)
+  while(*p)
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' - key) % 26;
-        }
-        p++;
+
+      q[n]=(*p - (char)3);
+   n++; p++;
   }
-
+  q[n++]='\0';
+  memcpy(str,q,n);
 }
-
 
 
 int sendToServer(char *msg, FILE *address)
 {
   //Encrypt data first and then send. 
-  // encrypt(msg, KEY);
+  printf("Plain Text %s\n", msg);
+  encrypt(msg);
+  printf("Cipher Text %s\n", msg);
 
   if(fputs(msg,address)==EOF)
   {
-
     return 0;
   }
   fflush(address);
@@ -71,7 +74,9 @@ int recvFromServer(char *msg, FILE *address)
 
 
     // Decrypt data first
-    // decrypt(msg, KEY);
+    printf("Cipher Text %s\n", msg);
+    decrypt(msg);
+    printf("Plain Text %s\n", msg);
 
     fflush(stdout);
 
@@ -171,8 +176,8 @@ main( int argc, char *argv[] )
     while (1) {
       // after the connection gets established I am going to wait for the server to send me the request to authenticate my username and password.
       // The server is going to be the one to initiate the conversation by asking for the username and password from the client
-      if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {
- //       if (recvFromServer(recv_buf, server_rep) != 0) {
+      /*if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {*/
+       if (recvFromServer(recv_buf, server_rep) != 0) {
 
         fprintf(stdout,"Server: %s", recv_buf);
         if(strcmp(recv_buf,good)==0){
@@ -227,7 +232,7 @@ main( int argc, char *argv[] )
     // Ameya's Code - Not sure of working.
     // The code below breaks a lot of functionality right now. 
     // Needs  to verify and check. 
-    printf("here\n");
+    // printf("here\n");
     int finished_reading = 0, len;
       while(1)
       {
@@ -237,7 +242,7 @@ main( int argc, char *argv[] )
         ioctl(sockfd, FIONREAD, &len);
         if (len > 0) 
         {
-          printf("%d\n", len);
+          //printf("%d\n", len);
           len = read(sockfd, recv_buf, len);
           fprintf(stdout, recv_buf);
           fflush(stdout);

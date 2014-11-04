@@ -3,6 +3,8 @@
 #define MAX_SYMS 64
 #define USERNAMELEN 127
 #define PASSWORDLEN 127
+#define MAXSIZE 1000
+
 
 #define PROMPT '>'
 #define SEMICOLON ';'

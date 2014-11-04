@@ -94,31 +94,36 @@ main( argc, argv, env )
 }
 
 
-void encrypt(char *msg, int key)
+void encrypt(char*str)
 {
-  char *p = msg;
-
-  while (*p)
+  int n=0;
+  char *p=str,
+     q[MAXSIZE];
+printf("encrypt server2");
+  while(*p)
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' + key) % 26;
-        }
-        p++;
-  }
 
+      q[n]=(*p + (char)3);
+   n++; p++;
+  }
+  q[n++]='\0';
+  printf("encrypt server2");
+  memcpy(str,q,--n);
 }
 
-void decrypt(char *msg, int key)
+void decrypt(char*str)
 {
-  char *p = msg;
+  int n=0;
+  char *p=str,
+     q[MAXSIZE];
 
-  while (*p)
+  while(*p)
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' - key) % 26;
-        }
-        p++;
+  if(*p)
+   q[n]=(*p - (char)3);
+   n++; p++;
   }
+  q[n++]='\0';
 
 }
 
@@ -126,9 +131,9 @@ void sendToClient(char *msg, FILE *address)
 {
 
   // Encrypt data first 
-  // encrypt(msg, KEY);
-
-
+  printf("Plain Text %s\n", msg);
+  encrypt(msg);
+  printf("Cipher Text %s\n", msg);
   fputs(msg,address);
   fflush(address);
 }
@@ -140,10 +145,12 @@ int recvFromClient(char *msg, FILE *address)
   {
 
     // Decrypt data first 
-    // decrypt(msg, KEY);
-   
+    printf("Cipher Text %s\n", msg);
+    decrypt(msg);
+    printf("Plain Text %s\n", msg);
+    
     // CHECK FOR SHELL CODE HERE!
-	printf("success");
+	  /*printf("success");*/
     return 1;
   }
 
@@ -303,9 +310,11 @@ service( int fd, char *name, char *password, char *good, char *evil)
            if(dup2(output_of_command_fd, 1) == -1)
 	   {
 		   printf("Error redirecting stdout:%s\n", strerror(errno));
+       // What happens if the error occurs, should we send the user something saying failed ?
+
 	   }
 
-           system(recv_buf);
+     system(recv_buf);
 	   dup2(saved_stdout, 1);
 	   close(saved_stdout);
 	   fclose(output_of_command_fp);
@@ -322,33 +331,12 @@ service( int fd, char *name, char *password, char *good, char *evil)
 	   }
 	   fclose(output_of_command_fp);
            send_buf[i] = '\0';
-//	   printf("%s\n", send_buf);
-           sendToClient(send_buf, client_rep);
+    sendToClient(send_buf, client_rep);
     fflush(client_rep);
-    
-//     dup2(std_out, fd);
-
-          // char command[100];
-          
-          // printf("%s", recv_buf);
-          
-          // size_t ln = strlen(recv_buf) - 1;
-          // if (recv_buf[ln] == '\n')
-          // recv_buf[ln] = '\0';    
-          
-          // strcpy(command, recv_buf);
-          // strcat(command, "> command_out");
-          // printf("%s", command);
-          // system(command);
-          // memset(command,0,strlen(command));
-
-          // // Now read from the file command_out and send to the client. 
-
-          // sendToClient("Incorrect Usage. See README\n", client_rep);
-
 
         }
 
+        // Else for exit probably ? Still keeping that or delete ?
 
       }
     }

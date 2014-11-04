@@ -1,6 +1,13 @@
 Complete Architecture README
 +++++++++++++++++++++++++++++
 
+Todo
+====
+1. Encryption/Decryption
+2. Exit on server side
+3. Seg fault on cat still 
+
+
 Pre-reading
 ===========
 1. http://www.cplusplus.com/reference/cstdio/fputs/ 
