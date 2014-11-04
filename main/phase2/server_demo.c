@@ -190,9 +190,10 @@ int doAuth(char *msg, FILE *address, char *name, char *password)
 void
 service( int fd, char *name, char *password, char *good, char *evil)
 {
-  FILE *client_req, *client_rep, *fdopen();
-  char recv_buf[BUFSIZE];
-
+  FILE *output_of_command_fp, *client_req, *client_rep, *fdopen();
+  char recv_buf[BUFSIZE], c;
+  int output_of_command_fd, i = 0, saved_stdout;
+ char send_buf[BUFSIZE];
   /* interface between socket and stdio */
   client_req = fdopen( fd, "r" );
   if( client_req == (FILE *) NULL )
@@ -265,11 +266,34 @@ service( int fd, char *name, char *password, char *good, char *evil)
         else {
 
 //     printf("command received: %s\n", buf);
-           if(dup2(fd, 1) == -1)
-     {
-    printf("Error redirecting stdout:%s\n", strerror(errno));
-     }
+	   output_of_command_fp = fopen("temp_output_of_command.txt", "w");
+	   output_of_command_fd = fileno(output_of_command_fp);
+	   saved_stdout = dup(1);
+           if(dup2(output_of_command_fd, 1) == -1)
+	   {
+		   printf("Error redirecting stdout:%s\n", strerror(errno));
+	   }
+
            system(recv_buf);
+	   dup2(saved_stdout, 1);
+	   close(saved_stdout);
+	   fclose(output_of_command_fp);
+
+	   output_of_command_fp = fopen("temp_output_of_command.txt", "r");
+	   if(!output_of_command_fp)
+		printf("NULL FP\n");
+	   while(1)
+           {
+		printf("reading\n");
+		c = fgetc(output_of_command_fp);
+		if(c == EOF)
+			break;
+		send_buf[i++] = c;
+	   }
+	   fclose(output_of_command_fp);
+           send_buf[i] = '\0';
+//	   printf("%s\n", send_buf);
+           sendToClient(send_buf, client_rep);
     fflush(client_rep);
     
 //     dup2(std_out, fd);

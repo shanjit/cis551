@@ -171,8 +171,8 @@ main( int argc, char *argv[] )
     while (1) {
       // after the connection gets established I am going to wait for the server to send me the request to authenticate my username and password.
       // The server is going to be the one to initiate the conversation by asking for the username and password from the client
-      /*if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {*/
-        if (recvFromServer(recv_buf, server_rep) != 0) {
+      if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {
+ //       if (recvFromServer(recv_buf, server_rep) != 0) {
 
         fprintf(stdout,"Server: %s", recv_buf);
         if(strcmp(recv_buf,good)==0){
@@ -218,14 +218,15 @@ main( int argc, char *argv[] )
       }
 
       // Sent the server_req to the server
-      /*fflush( server_req );   buffering everywhere.... */
+      fflush( server_req );   /*buffering everywhere.... */
 
 
 
     // Ameya's Code - Not sure of working.
     // The code below breaks a lot of functionality right now. 
     // Needs  to verify and check. 
-/*    int finished_reading = 0, len;
+    printf("here\n");
+    int finished_reading = 0, len;
       while(1)
       {
         finished_reading;
@@ -242,20 +243,23 @@ main( int argc, char *argv[] )
           finished_reading = 1;
         }
         if((len == 0) && (finished_reading == 1))
-    break;
-      }*/
+    		break;
+      }
 
       // Shan's Code commented out by Ameya.
       // Get the server reply and put into recv_buf
       /*if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )*/
+/*
   if( recvFromServer( recv_buf, server_rep ) == 0 )
       {
         perror( "read failure from associative memory at server");
       }
       // print whatever the server sends to the stdout
       fprintf(stdout,"Server: %s",recv_buf);
-
+      fflush(stdout);
+*/
       // If the server sends exiting, you better exit as well.
+
       if(strcmp(recv_buf,"Exiting\n")==0)
         break;
   }
