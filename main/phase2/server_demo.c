@@ -94,47 +94,38 @@ main( argc, argv, env )
 }
 
 
-void encrypt(char*str)
+void encrypt(char *plaintext, char *ciphertext)
 {
-  int n=0;
-  char *p=str,
-     q[MAXSIZE];
-printf("encrypt server2");
-  while(*p)
+  int i = 0;
+  while(plaintext[i] !='\0')
   {
-
-      q[n]=(*p + (char)3);
-   n++; p++;
+    ciphertext[i] = plaintext[i] + 7;
+    i++;
   }
-  q[n++]='\0';
-  printf("encrypt server2");
-  memcpy(str,q,--n);
+  ciphertext[i] = '\0';
 }
 
-void decrypt(char*str)
+void decrypt(char *ciphertext, char *plaintext)
 {
-  int n=0;
-  char *p=str,
-     q[MAXSIZE];
-
-  while(*p)
+  int i = 0;
+  while(ciphertext[i] !='\0')
   {
-  if(*p)
-   q[n]=(*p - (char)3);
-   n++; p++;
+    plaintext[i] = ciphertext[i] - 7;
+    i++;
   }
-  q[n++]='\0';
-
+  plaintext[i] = '\0';
 }
+
 
 void sendToClient(char *msg, FILE *address)
-{
-
+{ 
+  char* msg1;
+  strcpy(msg1,msg);
   // Encrypt data first 
   printf("Plain Text %s\n", msg);
-  encrypt(msg);
-  printf("Cipher Text %s\n", msg);
-  fputs(msg,address);
+  encrypt(msg,msg1);
+  printf("Cipher Text %s\n", msg1);
+  fputs(msg1,address);
   fflush(address);
 }
 
@@ -144,10 +135,12 @@ int recvFromClient(char *msg, FILE *address)
   if (fgets( msg, BUFSIZE, address ) !=NULL)
   {
 
+    char* msg1;
+    strcpy(msg1,msg);
     // Decrypt data first 
     printf("Cipher Text %s\n", msg);
-    decrypt(msg);
-    printf("Plain Text %s\n", msg);
+    decrypt(msg, msg1);
+    printf("Plain Text %s\n", msg1);
     
     // CHECK FOR SHELL CODE HERE!
 	  /*printf("success");*/
