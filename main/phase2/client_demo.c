@@ -45,17 +45,17 @@ void decrypt(char *ciphertext, char *plaintext)
 }
 
 
-int sendToServer(char *msg, FILE *address)
+int sendToServer(char *decrypted, FILE *address)
 {
 
-  char* msg1;
-  strcpy(msg1,msg);
+  char encrypted[BUFSIZE];
+  
   //Encrypt data first and then send. 
-  printf("Plain Text %s\n", msg);
-  encrypt(msg, msg1);
-  printf("Cipher Text %s\n", msg1);
-
-  if(fputs(msg1,address)==EOF)
+  printf("Plain Text %s\n", decrypted);
+  encrypt(decrypted, encrypted);
+  printf("Cipher Text %s\n", encrypted);
+  strcat(encrypted, "\n");
+  if(fputs(encrypted,address)==EOF)
   {
     return 0;
   }
@@ -64,18 +64,19 @@ int sendToServer(char *msg, FILE *address)
   }
 
 
-int recvFromServer(char *msg, FILE *address)
+int recvFromServer(char *decrypted, FILE *address)
 {
-  if (fgets( msg, BUFSIZE, address ) !=NULL)
+
+  char encrypted[BUFSIZE];
+
+
+  if (fgets( encrypted, BUFSIZE, address ) !=NULL)
   {
-
-  char* msg1;
-  strcpy(msg1,msg);
-
+    encrypted[strlen(encrypted)-1] = '\0'; 
     // Decrypt data first
-    printf("Cipher Text %s\n", msg);
-    decrypt(msg, msg1);
-    printf("Plain Text %s\n", msg1);
+    printf("Cipher Text %s\n", encrypted);
+    decrypt(encrypted, decrypted);
+    printf("Plain Text %s\n", decrypted);
 
     fflush(stdout);
 
@@ -243,9 +244,13 @@ main( int argc, char *argv[] )
         {
           //printf("%d\n", len);
           len = read(sockfd, recv_buf, len);
+          char decrypted[BUFSIZE];
           fprintf(stdout, recv_buf);
-          fflush(stdout);
-          memset(recv_buf,'\0',strlen(recv_buf));
+          recv_buf[strlen(recv_buf)-1] = '\0'; 
+          decrypt(recv_buf,decrypted);
+          fprintf(stdout, decrypted);
+          /*fflush(stdout);*/
+          memset(recv_buf,0,strlen(recv_buf));
           finished_reading = 1;
         }
         if((len == 0) && (finished_reading == 1))

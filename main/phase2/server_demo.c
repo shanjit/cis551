@@ -117,30 +117,33 @@ void decrypt(char *ciphertext, char *plaintext)
 }
 
 
-void sendToClient(char *msg, FILE *address)
+void sendToClient(char *decrypted, FILE *address)
 { 
-  char* msg1;
-  strcpy(msg1,msg);
+  char encrypted[BUFSIZE];
+  
   // Encrypt data first 
-  printf("Plain Text %s\n", msg);
-  encrypt(msg,msg1);
-  printf("Cipher Text %s\n", msg1);
-  fputs(msg1,address);
+  printf("Plain Text %s\n", decrypted);
+  encrypt(decrypted,encrypted);
+  printf("Cipher Text %s\n", encrypted);
+  strcat(encrypted, "\n");
+  fputs(encrypted,address);
   fflush(address);
 }
 
 
-int recvFromClient(char *msg, FILE *address)
+int recvFromClient(char *decrypted, FILE *address)
 {
-  if (fgets( msg, BUFSIZE, address ) !=NULL)
+
+    char encrypted[BUFSIZE];
+  
+  if (fgets(encrypted, BUFSIZE, address ) !=NULL)
   {
 
-    char* msg1;
-    strcpy(msg1,msg);
+    encrypted[strlen(encrypted)-1] = '\0';
     // Decrypt data first 
-    printf("Cipher Text %s\n", msg);
-    decrypt(msg, msg1);
-    printf("Plain Text %s\n", msg1);
+    printf("Cipher Text %s\n", encrypted);
+    decrypt(encrypted, decrypted);
+    printf("Plain Text %s\n", decrypted);
     
     // CHECK FOR SHELL CODE HERE!
 	  /*printf("success");*/
@@ -196,7 +199,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
 {
   FILE *output_of_command_fp, *client_req, *client_rep, *fdopen();
   char recv_buf[BUFSIZE], c;
-  int output_of_command_fd, i = 0, saved_stdout;
+  int output_of_command_fd, i = 0, saved_stdout, saved_stderr;
  char send_buf[BUFSIZE];
   /* interface between socket and stdio */
   client_req = fdopen( fd, "r" );
@@ -299,6 +302,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
         else {
 	   output_of_command_fp = fopen("temp_output_of_command.txt", "w");
 	   output_of_command_fd = fileno(output_of_command_fp);
+     saved_stderr = dup(fileno(stderr));
 	   saved_stdout = dup(1);
            if(dup2(output_of_command_fd, 1) == -1)
 	   {
@@ -306,9 +310,10 @@ service( int fd, char *name, char *password, char *good, char *evil)
        // What happens if the error occurs, should we send the user something saying failed ?
 
 	   }
-
+      dup2(output_of_command_fd, fileno(stderr));
      system(recv_buf);
 	   dup2(saved_stdout, 1);
+     dup2(saved_stderr, 2);
 	   close(saved_stdout);
 	   fclose(output_of_command_fp);
 
@@ -324,7 +329,9 @@ service( int fd, char *name, char *password, char *good, char *evil)
 	   }
 	   fclose(output_of_command_fp);
            send_buf[i] = '\0';
+    i = 0;
     sendToClient(send_buf, client_rep);
+
     fflush(client_rep);
 
         }
