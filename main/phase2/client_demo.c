@@ -1,7 +1,3 @@
-//
-// Anything sent to the server is server_req
-// Anything got from the server is the server_rep
-
 /*This is the client file for phase 1 of homework 2 for CIS 551 Fall 2014
 
 Contributors:
@@ -10,18 +6,12 @@ Nachiket Nanadikar
 Ameya Moore
 */
 
-// Things to do:
-// Wrong shell command should through an error.
-// 
-
-
-
 
 #include <sys/ioctl.h>
 #include "demo.h"
 #include <unistd.h>
 
-
+// Encryption the plaintext string and change the ciphertext string 
 void encrypt(char *plaintext, char *ciphertext)
 {
   int i = 0;
@@ -33,6 +23,7 @@ void encrypt(char *plaintext, char *ciphertext)
   ciphertext[i] = '\0';
 }
 
+// Decrypt the plaintext string and change the ciphertext string 
 void decrypt(char *ciphertext, char *plaintext)
 {
   int i = 0;
@@ -44,13 +35,14 @@ void decrypt(char *ciphertext, char *plaintext)
   plaintext[i] = '\0';
 }
 
-
+// Takes the decrypted text, encrypts it and then sends it to the server
+// Return 1 if success else return 0
 int sendToServer(char *decrypted, FILE *address)
 {
-
   char encrypted[BUFSIZE];
   
   //Encrypt data first and then send. 
+  // Uncomment the lines below to see the encryption in action
   /*printf("Plain Text %s\n", decrypted);*/
   encrypt(decrypted, encrypted);
   /*printf("Cipher Text %s\n", encrypted);*/
@@ -64,29 +56,28 @@ int sendToServer(char *decrypted, FILE *address)
   }
 
 
+// fgets the encrypted data from the server and then decrypts it before 
+// putting it in the decrpyted string
+// Returns 1 if success else 0
 int recvFromServer(char *decrypted, FILE *address)
 {
 
   char encrypted[BUFSIZE];
 
-
   if (fgets( encrypted, BUFSIZE, address ) !=NULL)
   {
     encrypted[strlen(encrypted)-1] = '\0'; 
     // Decrypt data first
+    // Uncomment the lines below to see the decryption in action
     /*printf("Cipher Text %s\n", encrypted);*/
     decrypt(encrypted, decrypted);
     /*printf("Plain Text %s\n", decrypted);*/
-
     fflush(stdout);
-
-    // CHECK FOR SHELL CODE HERE!
-
-
     return 1;
   }
 
   else {
+    // Error in fgets
     return 0;
   }
 }
@@ -102,7 +93,7 @@ main( int argc, char *argv[] )
   char send_buf[BUFSIZE];
 
   // The replies sent by the server. These strings are just used for comparison
-
+  // good and evil from HW1
   char *good = "Welcome to The Machine!\n";
   char *evil = "Invalid identity, exiting!\n";
 
@@ -143,15 +134,14 @@ main( int argc, char *argv[] )
       exit( 99 );
     }
 
-  /* attempt to make the actual connection */
+  /* connect to the server */
   if( connect(sockfd, (SA *) &servaddr, sizeof(servaddr)) < 0 )
     {
       fprintf(stderr, "Connection Refused, Server is down\n");
       exit( 100 );
     }
 
-  /* setup the interfaces between the new socket and stdio system */
-  // server_requet is anything you request from the server
+  // server_req is anything you request from the server
   server_req = fdopen( sockfd, "w" );
   if( server_req == (FILE *) NULL )
     {
@@ -167,47 +157,39 @@ main( int argc, char *argv[] )
       exit( 3 );
     }
 
-  /* The main interactive loop, getting input from the user and
-   * passing to the server, and presenting replies from the server to
-   * the user, as appropriate. Lots of opportunity to generalize
-   * this primitive user interface...
-   */
+    // While loop to maintain communication
     printf("Connection established\n");
     while (1) {
       // after the connection gets established I am going to wait for the server to send me the request to authenticate my username and password.
       // The server is going to be the one to initiate the conversation by asking for the username and password from the client
-      /*if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {*/
        if (recvFromServer(recv_buf, server_rep) != 0) {
 
         fprintf(stdout,"Server: %s", recv_buf);
         if(strcmp(recv_buf,good)==0){
           //
-          //
-          //
+          // If the user gets authenticated
           // This is the User interface showed to the client.
-          // Add modifications of MAC id here
           //
           //
         printf("Add or Update user by: user,password\n");
 		    printf("Add MAC by: addmac mac\n");
 	      printf("Delete MAC by: deletemac mac\n");
-          break; // break out from while (1)
+        break; 
         
         }
 
 
         else if(strcmp("Exiting\n", recv_buf)==0)
         {
+          // If the server sends Exiting then exit.
+          // Only run during the authentication process
           printf("Shell Code found! Exiting!\n");
           exit(0);
         }
          else if(strcmp(recv_buf,evil)==0) {
-          // request is denied => Close the server_req and the server_req and the socket
-          // close the server_req, server_rep file descriptors if auth failed.
           fclose( server_req );
           fclose( server_rep );
           close( sockfd);
-          // exit the program
           exit( 0 );
         }
 
@@ -220,15 +202,17 @@ main( int argc, char *argv[] )
       }
     }
 
-  // Run this when authenticated.
+  // The user comes here if he gets authenticated
   // make a prompt with '>' 
+  // send _buf is the buffer which has anything you type in to the keyboard (stdin)
   for( putchar('>');
      (fgets( send_buf, BUFSIZE, stdin ) != NULL );
       putchar('>'))
   {
 
       if(strcmp(send_buf,"exit\n")==0)
-      {
+      { 
+        // if you enter exit then you exit(0)
         sendToServer("exit\n", server_req);
         exit(0);
       }
@@ -236,18 +220,13 @@ main( int argc, char *argv[] )
       //Upon successful completion, fputs() shall return a non-negative number. Otherwise, it shall return EOF, set an error indicator for the stream, [CX] [Option Start]  and set errno to indicate the error. [Option End]
       if( sendToServer(send_buf, server_req) == 0)
       {
-        perror( "write failure to associative memory at server" );
+        perror( "Send to server failed." );
       }
 
       // Sent the server_req to the server
-      fflush( server_req );   /*buffering everywhere.... */
+      fflush( server_req );
 
-
-
-    // Ameya's Code - Not sure of working.
-    // The code below breaks a lot of functionality right now. 
-    // Needs  to verify and check. 
-    // printf("here\n");
+    // Ameya's code to handle shell code output from the server
     int finished_reading = 0, len;
       while(1)
       {
@@ -261,6 +240,7 @@ main( int argc, char *argv[] )
           len = read(sockfd, recv_buf, len);
           char decrypted[BUFSIZE];
           /*fprintf(stdout, recv_buf);*/
+          // Make sure you do decryption for everything, because the server always sends via encryption
           recv_buf[strlen(recv_buf)-1] = '\0'; 
           decrypt(recv_buf,decrypted);
           fprintf(stdout, decrypted);
@@ -271,20 +251,6 @@ main( int argc, char *argv[] )
         if((len == 0) && (finished_reading == 1))
     		break;
       }
-
-      // Shan's Code commented out by Ameya.
-      // Get the server reply and put into recv_buf
-      /*if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )*/
-/*
-  if( recvFromServer( recv_buf, server_rep ) == 0 )
-      {
-        perror( "read failure from associative memory at server");
-      }
-      // print whatever the server sends to the stdout
-      fprintf(stdout,"Server: %s",recv_buf);
-      fflush(stdout);
-*/
-      // If the server sends exiting, you better exit as well.
 
       
   }

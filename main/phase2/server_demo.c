@@ -1,46 +1,16 @@
 //
-// Anything sent to the client is the client_rep
-// Anything got from the client is the client_req
+//  Homework 2 CIS 551
+//  Submitted by: Nachiket Nanadikar, Ameya, More, Shanjit Singh Jajmann
 //
-
-// Use of restore?
-// find_colons/equals
-//
-
 
 #include "demo.h"
 #include "errno.h"
 
-struct sym_list Head;	/* head of singly-linked list */
-
-/*
- * Daemon provides an interactive associative memory
- * via a socket-based interface. Clients either set
- * passwords with an assignment statement or access
- * passwords with a $ preface. When the password is
- * accessed, we write it onto the client's socket.
- * We currently do this as an iterative server for
- * reasons of queuing and serialization. If the
- * server is made concurrent, the database will have
- * to have serialized access and copy control - this
- * is not necessary yet.
- *
- * Program notes:
- * Parsing is done
- * with find_dollar() and find_equals().
- * Storage management is carried out by the insert()
- * and lookup() routines.
- * save() and restore() routines added to
- * use disk storage to maintain memory across
- * invocations.
- * Iterative server code is copied from Stevens, "UNIX Network
- * Programming: Networking APIs: Sockets and XTI," p. 101
- *
- */
+struct sym_list Head; 
 
 main( argc, argv, env )
-	int argc;
-	char *argv[], *env[];
+  int argc;
+  char *argv[], *env[];
 {
   int server_fd, create_service(), connection_fd;
   void service(), save(), restore();
@@ -49,10 +19,12 @@ main( argc, argv, env )
   char recv_buf[BUFSIZE];
 
   char name[USERNAMELEN], password[PASSWORDLEN];
+
+  // good and evil pointers as defined in HW1
   char *good = "Welcome to The Machine!\n";
   char *evil = "Invalid identity, exiting!\n";
-	
-  //Start the watchdog script as a background process
+  
+  // Start the watchdog script as a background process
   system("./watchdog.sh &");
   system("iptables-restore < iptables-rules");
 
@@ -67,33 +39,30 @@ main( argc, argv, env )
 
       // After the connection is accepted. Check if the connection is ok.
       if( connection_fd < 0 ){
-      fprintf(stderr, "Error: Socket Accept\n");
-	     
-	     exit( ERR_ACCEPT );
-	    }
+      fprintf(stderr, "Error: Socket Accept\n");       
+      exit( ERR_ACCEPT );
+      }
 
-      /*The file "file" for the username and password is loaded 
-      in RAM using RESTORE and SAVED before exiting. Thats what 
-      those two functions do. */
-	   restore( DATABASE );
+    // Restore the database => load the contents of file into the RAM
+    restore( DATABASE );
 
-     // Service any incoming request 
-	   service(connection_fd,name,password, good,evil);
+    // Service any incoming request 
+    service(connection_fd,name,password, good,evil);
 
-     // Save the data from the RAM onto the file before exiting.
-	   save( DATABASE );
+    // Save the data from the RAM onto the file before exiting.
+    save( DATABASE );
 
-     // close the connection
-	   close( connection_fd );
+    // close the connection
+    close( connection_fd );
 
-     printf("Connection Terminated\n");
-     break;
+    printf("Terminating Connection\n");
+    break;
     }
 
   close(server_fd);
 }
 
-
+// Function to encrypt the *plaintext and return in the ciphertext
 void encrypt(char *plaintext, char *ciphertext)
 {
   int i = 0;
@@ -105,6 +74,7 @@ void encrypt(char *plaintext, char *ciphertext)
   ciphertext[i] = '\0';
 }
 
+// Function to encrypt the *ciphertext and return in *plaintext
 void decrypt(char *ciphertext, char *plaintext)
 {
   int i = 0;
@@ -116,12 +86,13 @@ void decrypt(char *ciphertext, char *plaintext)
   plaintext[i] = '\0';
 }
 
-
+// Send data to the client
 void sendToClient(char *decrypted, FILE *address)
 { 
   char encrypted[BUFSIZE];
   
   // Encrypt data first 
+  // Uncomment lines below to verify encryption
   /*printf("Plain Text %s\n", decrypted);*/
   encrypt(decrypted,encrypted);
   /*printf("Cipher Text %s\n", encrypted);*/
@@ -131,6 +102,8 @@ void sendToClient(char *decrypted, FILE *address)
 }
 
 
+// Receive data from the server
+// Returns 1 if fgets successful else return 0
 int recvFromClient(char *decrypted, FILE *address)
 {
 
@@ -141,42 +114,44 @@ int recvFromClient(char *decrypted, FILE *address)
 
     encrypted[strlen(encrypted)-1] = '\0';
     // Decrypt data first 
-      /*printf("Cipher Text %s\n", encrypted);*/
+    // Uncomment lines below to verify decryption
+    //printf("Cipher Text %s\n", encrypted);
     decrypt(encrypted, decrypted);
-    /*printf("Plain Text %s\n", decrypted);
-    */
-    // CHECK FOR SHELL CODE HERE!
-	  /*printf("success");*/
+    //printf("Plain Text %s\n", decrypted);
     return 1;
   }
 
   else {
+    // Error in fgets from the server
     return 0;
   }
 }
 
+// Does the authentication after parsing the msg from the *address, puts the
+// name in name and the password in password. 
+// Returns 1 if authentication valid or return 0 if auth fails
 int doAuth(char *msg, FILE *address, char *name, char *password)
 {
     fprintf(stdout, "Authenticating User\n");
-        char *ptr, *ptr_lookup;
-      char *lookup_res, *find_newline;
+    char *ptr, *ptr_lookup;
+    char *lookup_res, *find_newline;
 
-      fix_tcl( msg ); 
+    // TCL fix added by jms
+    fix_tcl( msg ); 
 
-      // use find_colon to find out at which position colon occurs
-      if( (ptr = find_comma(msg)) != (char *) NULL ) {
+    // use find_comma to find out at which position comma occurs
+    // Idea used from jms code
+    if( (ptr = find_comma(msg)) != (char *) NULL ) {
+      ptr_lookup = find_comma(msg);
+      *ptr = EOS;
+      sscanf(msg,"%s",name);
+      sscanf(++ptr,"%s",password);
 
-        ptr_lookup = find_comma(msg);
-        *ptr = EOS;
-        sscanf(msg,"%s",name);
-        sscanf(++ptr,"%s",password);
-
-        printf("Name: %s\n", name);
-        printf("Password: %s\n", password);
-
-
-       /* removes trailing newline if found */
-       if( (find_newline = strrchr( ptr_lookup, NEWLINE )) != NULL )
+      printf("Name: %s\n", name);
+      printf("Password: %s\n", password);
+   
+      /* removes trailing newline if found */
+      if( (find_newline = strrchr( ptr_lookup, NEWLINE )) != NULL )
          *find_newline = EOS;
 
         // lookup takes the username as the argument and returns the password as its argument.
@@ -194,6 +169,8 @@ int doAuth(char *msg, FILE *address, char *name, char *password)
       }
 }
 
+
+// Service the client
 void
 service( int fd, char *name, char *password, char *good, char *evil)
 {
@@ -205,7 +182,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
   client_req = fdopen( fd, "r" );
   if( client_req == (FILE *) NULL )
     {
-        fprintf(stderr, "Error: fdopen client_req\n");
+      fprintf(stderr, "Error: fdopen client_req\n");
       exit( 1 );
     }
   client_rep = fdopen( fd, "w" );
@@ -219,19 +196,22 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
   sendToClient("Enter username,password for authentication \n", client_rep);
 
-  // Evaluate the first response from the client.
+  // Evaluate the authentication from the client
   while( recvFromClient(recv_buf, client_req) != 0 ){
-		
-		if(strstr(recv_buf, "/bin/sh") != NULL)
-		{
-			
-      sendToClient("Exiting\n", client_rep);
-			exit(0);
-		}
 
+    // Compare to see if shell code is present in the auth credentials entered by the client
+    if(strstr(recv_buf, "/bin/sh") != NULL)
+    {
+      // if it is the send exit to the client and exit the server 
+      sendToClient("Exiting\n", client_rep);
+      exit(0);
+    }
+
+      // If shell code isn't present do authentication
       int authVar = doAuth(recv_buf, client_rep, name, password);
       if(authVar==1)
       {
+        // If authenticated then send *good to the client
         printf("%s",good);
         sendToClient(good, client_rep);
         printf("User Authenticated\n");
@@ -240,8 +220,10 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
       else
       {
+        // If not authenticated then send *evil to the client
         printf("%s",evil);
         sendToClient(evil, client_rep);
+        
         // Exit the server and make sure the script restarts the server 
         printf("The script restarts the process\n");
         exit(99);
@@ -250,12 +232,13 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
     }
 
+    // Stuck in this while loop if the user gets authenticated 
     while(1) {
-      char *ptr;
-      char newname[USERNAMELEN], newpassword[PASSWORDLEN];
-		char mac[18];
-		char buf[10];
-		
+    char *ptr;
+    char newname[USERNAMELEN], newpassword[PASSWORDLEN];
+    char mac[18];
+    char buf[10];
+    
       if( recvFromClient(recv_buf, client_req) != 0 ){
 
         /*Exit command*/
@@ -265,9 +248,9 @@ service( int fd, char *name, char *password, char *good, char *evil)
         }
 
         /*Add or update*/
-        else if( (ptr = find_comma( recv_buf )) != (char *) NULL ) {
-	        *ptr = EOS;
-	        sscanf(recv_buf,"%s",newname);
+      else if( (ptr = find_comma( recv_buf )) != (char *) NULL ) {
+          *ptr = EOS;
+          sscanf(recv_buf,"%s",newname);
           sscanf(++ptr,"%s",newpassword);
           printf("Saving Credentials\n");
           insert( newname, newpassword );
@@ -275,82 +258,81 @@ service( int fd, char *name, char *password, char *good, char *evil)
         }
 
         /*Add mac id*/
-		else if( (ptr = find_spc( recv_buf )) != (char *) NULL ) {
-			/*char msg1[150];
-			strcpy(msg1, "iptables -I INPUT 2 -p tcp --dport ");
-			char *msg2 = " -m mac --mac-source ";
-	        *ptr = EOS;
-			sscanf(recv_buf,"%s",mac);
-			sscanf(++ptr,"%s",port);
-			strcat(msg1, port);
-			strcat(msg1, msg2);
-			strcat(msg1, mac);
-			system(msg1);
-			system("iptables-save > iptables-rules");*/
-			char msg1[150];
-			char *msg2 = " -j ACCEPT";
-			strcpy(msg1, "iptables -I INPUT 2 -m mac --mac-source ");
-	        *ptr = EOS;
-			sscanf(recv_buf,"%s",buf);
-			if(strcmp(recv_buf, "addmac") == 0)
-			{
-				sscanf(++ptr,"%s",mac);
-				strcat(msg1, mac);
-				strcat(msg1, msg2);
-				system(msg1);
-				//system("iptables-save > iptables-rules");
-				sendToClient("MAC address added\n", client_rep);
-			}
+      else if( (ptr = find_spc( recv_buf )) != (char *) NULL ) {
+      /*char msg1[150];
+      strcpy(msg1, "iptables -I INPUT 2 -p tcp --dport ");
+      char *msg2 = " -m mac --mac-source ";
+          *ptr = EOS;
+      sscanf(recv_buf,"%s",mac);
+      sscanf(++ptr,"%s",port);
+      strcat(msg1, port);
+      strcat(msg1, msg2);
+      strcat(msg1, mac);
+      system(msg1);
+      system("iptables-save > iptables-rules");*/
+      char msg1[150];
+      char *msg2 = " -j ACCEPT";
+      strcpy(msg1, "iptables -I INPUT 2 -m mac --mac-source ");
+          *ptr = EOS;
+      sscanf(recv_buf,"%s",buf);
+      if(strcmp(recv_buf, "addmac") == 0)
+      {
+        sscanf(++ptr,"%s",mac);
+        strcat(msg1, mac);
+        strcat(msg1, msg2);
+        system(msg1);
+        //system("iptables-save > iptables-rules");
+        sendToClient("MAC address added\n", client_rep);
+      }
         }
-		
-		else if( (ptr = find_spc( recv_buf )) != (char *) NULL ) {
-			char msg1[150];
-			strcpy(msg1, "iptables -D INPUT -m mac --mac-source ");
-	        *ptr = EOS;
-			sscanf(recv_buf,"%s",buf);
-			if(strcmp(recv_buf, "deletemac") == 0)
-			{
-				sscanf(++ptr,"%s",mac);
-				strcat(msg1, mac);
-				system(msg1);
-				//system("iptables-save > iptables-rules");
-				sendToClient("MAC address deleted\n", client_rep);
-			}
-	     
+    
+    else if( (ptr = find_spc( recv_buf )) != (char *) NULL ) {
+      char msg1[150];
+      strcpy(msg1, "iptables -D INPUT -m mac --mac-source ");
+          *ptr = EOS;
+      sscanf(recv_buf,"%s",buf);
+      if(strcmp(recv_buf, "deletemac") == 0)
+      {
+        sscanf(++ptr,"%s",mac);
+        strcat(msg1, mac);
+        system(msg1);
+        //system("iptables-save > iptables-rules");
+        sendToClient("MAC address deleted\n", client_rep);
+      }
+       
         }
 
         /*Execute Shell and pass recv_buf to the shell */
         else {
-	   output_of_command_fp = fopen("temp_output_of_command.txt", "w");
-	   output_of_command_fd = fileno(output_of_command_fp);
+     output_of_command_fp = fopen("temp_output_of_command.txt", "w");
+     output_of_command_fd = fileno(output_of_command_fp);
      saved_stderr = dup(fileno(stderr));
-	   saved_stdout = dup(1);
+     saved_stdout = dup(1);
            if(dup2(output_of_command_fd, 1) == -1)
-	   {
-		   printf("Error redirecting stdout:%s\n", strerror(errno));
-       // What happens if the error occurs, should we send the user something saying failed ?
+     {
+       printf("Error redirecting stdout:%s\n", strerror(errno));
 
-	   }
+     }
       dup2(output_of_command_fd, fileno(stderr));
      system(recv_buf);
-	   dup2(saved_stdout, 1);
+     dup2(saved_stdout, 1);
      dup2(saved_stderr, 2);
-	   close(saved_stdout);
-	   fclose(output_of_command_fp);
-		output_of_command_fp = fopen("temp_output_of_command.txt", "a");
-		fputc(3, output_of_command_fp);
-		fclose(output_of_command_fp);
-	   output_of_command_fp = fopen("temp_output_of_command.txt", "r");
-	   if(!output_of_command_fp)
-		printf("NULL FP\n");
-	   while(1)
+     close(saved_stdout);
+     fclose(output_of_command_fp);
+    output_of_command_fp = fopen("temp_output_of_command.txt", "a");
+    fputc(3, output_of_command_fp);
+    fclose(output_of_command_fp);
+     output_of_command_fp = fopen("temp_output_of_command.txt", "r");
+     if(!output_of_command_fp)
+    printf("NULL FP\n");
+     while(1)
            {
-		c = fgetc(output_of_command_fp);
-		if(c == EOF || c == 3)
-			break;
-		send_buf[i++] = c;
-	   }
-	   fclose(output_of_command_fp);
+    c = fgetc(output_of_command_fp);
+    if(c == EOF || c == 3)
+      break;
+    send_buf[i++] = c;
+     }
+     fclose(output_of_command_fp);
            send_buf[i] = '\0';
     i = 0;
     sendToClient(send_buf, client_rep);
@@ -366,6 +348,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
 }
 
+// Create the socket and all connections for the client to connect to it
 int create_service()
 {
   int listenfd;
@@ -378,8 +361,8 @@ int create_service()
       exit( ERR_SOCKET );
     }
 
-	int optval = 1;
-	setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+  int optval = 1;
+  setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
   bzero( &servaddr, sizeof(servaddr) );
   servaddr.sin_family = AF_INET;
@@ -388,8 +371,7 @@ int create_service()
   char servip[20] = "192.168.1.1";
 
   // Uncomment line below to associate server ipaddress with particular ipaddress 
-  /* servaddr.sin_addr.s_addr = inet_addr(recv_buffer_ip);
-  */
+  // servaddr.sin_addr.s_addr = inet_addr(recv_buffer_ip);
 
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servaddr.sin_port = htons( CIS551_PORT );
