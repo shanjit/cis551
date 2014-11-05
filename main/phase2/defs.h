@@ -7,9 +7,9 @@
 
 
 #define PROMPT '>'
+#define SPACE ' '
 #define SEMICOLON ';'
 #define COMMA ','
-#define DOLLAR '$'
 #define HASH '#'
 #define EQUALS '='
 #define NEWLINE '\n'
@@ -33,10 +33,10 @@
 #define ERR_ACCEPT 4
 
 #define find_equals(_s) strchr(_s, EQUALS)
-#define find_dollar(_s) strchr(_s, DOLLAR)
 #define	find_semicolon(_s) strchr(_s, SEMICOLON)
 #define	find_comma(_s) strchr(_s, COMMA)
 #define	find_hash(_s) strchr(_s, HASH)
+#define	find_spc(_s) strchr(_s, SPACE)
 
 void *malloc();
 

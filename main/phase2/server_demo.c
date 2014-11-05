@@ -254,7 +254,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
       char *ptr;
       char newname[USERNAMELEN], newpassword[PASSWORDLEN];
 		char mac[18];
-		char port[6];
+		char buf[10];
 		
       if( recvFromClient(recv_buf, client_req) != 0 ){
 
@@ -275,7 +275,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
         }
 
         /*Add mac id*/
-		else if( (ptr = find_semicolon( recv_buf )) != (char *) NULL ) {
+		else if( (ptr = find_spc( recv_buf )) != (char *) NULL ) {
 			/*char msg1[150];
 			strcpy(msg1, "iptables -I INPUT 2 -p tcp --dport ");
 			char *msg2 = " -m mac --mac-source ";
@@ -291,28 +291,31 @@ service( int fd, char *name, char *password, char *good, char *evil)
 			char *msg2 = " -j ACCEPT";
 			strcpy(msg1, "iptables -I INPUT 2 -m mac --mac-source ");
 	        *ptr = EOS;
-			sscanf(recv_buf,"%s",mac);
-			sscanf(++ptr,"%s",port);
-			strcat(msg1, mac);
-			strcat(msg1, msg2);
-			system(msg1);
-			//system("iptables-save > iptables-rules");
-			sendToClient("MAC address added\n", client_rep);
+			sscanf(recv_buf,"%s",buf);
+			if(strcmp(recv_buf, "addmac") == 0)
+			{
+				sscanf(++ptr,"%s",mac);
+				strcat(msg1, mac);
+				strcat(msg1, msg2);
+				system(msg1);
+				//system("iptables-save > iptables-rules");
+				sendToClient("MAC address added\n", client_rep);
+			}
         }
 		
-		else if( (ptr = find_hash( recv_buf )) != (char *) NULL ) {
+		else if( (ptr = find_spc( recv_buf )) != (char *) NULL ) {
 			char msg1[150];
-			strcpy(msg1, "iptables -D INPUT ");
-			char *msg2 = " -m mac --mac-source ";
+			strcpy(msg1, "iptables -D INPUT -m mac --mac-source ");
 	        *ptr = EOS;
-			sscanf(recv_buf,"%s",mac);
-			sscanf(++ptr,"%s",port);
-			strcat(msg1, port);
-			strcat(msg1, msg2);
-			strcat(msg1, mac);
-			system(msg1);
-			//system("iptables-save > iptables-rules");
-			sendToClient("MAC address deleted\n", client_rep);
+			sscanf(recv_buf,"%s",buf);
+			if(strcmp(recv_buf, "deletemac") == 0)
+			{
+				sscanf(++ptr,"%s",mac);
+				strcat(msg1, mac);
+				system(msg1);
+				//system("iptables-save > iptables-rules");
+				sendToClient("MAC address deleted\n", client_rep);
+			}
 	     
         }
 
@@ -355,8 +358,6 @@ service( int fd, char *name, char *password, char *good, char *evil)
     fflush(client_rep);
 
         }
-
-        // Else for exit probably ? Still keeping that or delete ?
 
       }
     }

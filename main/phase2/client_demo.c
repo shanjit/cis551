@@ -189,8 +189,8 @@ main( int argc, char *argv[] )
           //
           //
         printf("Add or Update user by: user,password\n");
-		    printf("Add MAC by: mac;port\n");
-	      printf("Delete MAC by: mac#port\n");
+		    printf("Add MAC by: addmac mac\n");
+	      printf("Delete MAC by: deletemac mac\n");
           break; // break out from while (1)
         
         }
