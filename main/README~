@@ -1,0 +1,101 @@
+// README file for Phase 1 of HW2 
+// Team Members
+// 	Shanjit Singh Jajmann
+//	Nachiket Nanadikar
+//	Ameya More
+
+
+OBJECTIVE
+=========
+
+The aim for this phase of the homework was to:-
+	a) Implement a basic server-client architecture with basic authentication (along the lines of badbuf.c)
+	b) Implement functionality for adding a new user and updating the password for the current user once the user logs in. 
+
+While beginning this phase we were in a dilemma whether we would like to use the tcp_demo code provided to us or write a client/server from scratch. Implementing it from scratch gave us a better view of how everything interacts with each other. 
+
+Code Structure
+==============
+
+Communication
+++++++++++++++
+The communication between the server and the client is done using TCP. Appropriate sockets, binding and listen/accept functions are used from the imported C libraries. 
+
+Each message made for communication is a packet which has the following structure, 
+struct app_packet
+{
+	unsigned int control_seq;
+	char payload[256];
+};
+
+The control_seq is an unsigned int which is sent along with every message exchanged between the server and the client. 
+
+This helps the server to classify each message coming in from the client as either :-
+	a) Authentication (control_seq = 100) - In this case the payload will have the username and password to authenticate.
+
+	b) Request to update password (control_seq = 101) - In this case the payload has the new password for the current user. 
+
+	c) Request to add new user (control_seq = 102) - In this case the payload has the new username and password. 
+
+The client on its end uses the control_seq to classify the messages from the server into the following categories :- 
+	a) Authenticated (control_seq = 200) - In this case the payload has nothing. The message from the server means that the client has been authenticated successfully. 
+
+	b) Authentication Invalid (control_seq = 204) - In this case the payload has nothing. The message from the server means that the client has not passed authentication.
+
+	c) Password Updated (control_seq = 201) - In this case the payload has nothing. The message from the server means that the client has successfully updated the password of the current user. 
+
+	d) New User added (control_seq = 202) - In this case the payload has nothing. The message from the server means that the client has successfully added a new user with the given username and password. 
+
+Server
+++++++
+On the server side a socket is started, bound to the port and ipaddress of the drone (192.168.1.1). This is then used to listen for any incoming connections. The message structure being maintained as described above, the server deals with the 'control_seq' appropriately and send back messages to the client. 
+
+Running the Server Code
+------------------------
+This is as simple as ./server. For the ar-drone since its ip address is always 192.168.1.1 this works directly. For any change in ipaddress, the server.c code needs to be updated. 
+
+Client
+++++++
+On the client side, a socket is created and the user enters the <ip-address> of the server with the username and the password when running the client program itself. If the user is authenticated using the username and password combination entered. The user is presented with a menu to either update the password or add a new user. 
+
+
+Running the Client code
+------------------------
+To run the client on a machine after connecting to the ar-drone, the following command is run, 
+./client 192.168.1.1 <username> <password> 
+
+The following menu appears on successful authentication, 
+
+
+		Choose among the following options:
+
+
+		1. Update your password:
+
+
+		2. Add new User:
+
+
+Waiting for user option. If an incorrect option is selected the client code exits. 
+
+
+Running on the drone
+------------------------
+To run the server on the drone, server.c is first compiled with the gcc cross-compiler for ARM. The following command is run:
+arm-linux-gnueabi-gcc server.c -o server
+
+The server executable and the database file 'database.txt' are transferred to the drone via ftp. The following commands are run to transfer the files onto the drone:
+ftp 192.168.1.1
+put ./server
+put ./database.txt	
+
+The server can be run in the same way as described above i.e. ./server.
+If the server does not have execute permissions, chmod can be used to change the default permissions.
+
+List of files submitted
+-----------------------
+client.c
+server.c
+defs.h
+database.txt
+start.sh

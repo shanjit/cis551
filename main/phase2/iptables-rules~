@@ -3,7 +3,6 @@
 :INPUT ACCEPT [0:0]
 :FORWARD ACCEPT [0:0]
 :OUTPUT ACCEPT [224:14080]
--A INPUT -m string --string "6ipu6zo" --algo kmp --to 65535 -j DROP
 -A INPUT -p tcp -m tcp --dport 23 -j ACCEPT                        
 -A INPUT -p tcp -m tcp --dport 10551 -j ACCEPT                     
 -A INPUT -j DROP
