@@ -7,7 +7,7 @@
 Contributors:
 Shanjit Singh Jajmann
 Nachiket Nanadikar
-Ameya More
+Ameya Moore
 */
 
 // Things to do:
@@ -15,46 +15,47 @@ Ameya More
 // 
 
 
+
+
 #include <sys/ioctl.h>
 #include "demo.h"
 #include <unistd.h>
 
-void encrypt(char *msg, int key)
+
+void encrypt(char *plaintext, char *ciphertext)
 {
-  char *p = msg;
-
-  while (*p)
+  int i = 0;
+  while(plaintext[i] !='\0')
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' + key) % 26;
-        }
-        p++;
+    ciphertext[i] = plaintext[i] + 7;
+    i++;
   }
-
+  ciphertext[i] = '\0';
 }
 
-void decrypt(char *msg, int key)
+void decrypt(char *ciphertext, char *plaintext)
 {
-  char *p = msg;
-
-  while (*p)
+  int i = 0;
+  while(ciphertext[i] !='\0')
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' - key) % 26;
-        }
-        p++;
+    plaintext[i] = ciphertext[i] - 7;
+    i++;
   }
-
+  plaintext[i] = '\0';
 }
 
 
-
-int sendToServer(char *msg, FILE *address)
+int sendToServer(char *decrypted, FILE *address)
 {
+
+  char encrypted[BUFSIZE];
+  
   //Encrypt data first and then send. 
-  // encrypt(msg, KEY);
-
-  if(fputs(msg,address)==EOF)
+  /*printf("Plain Text %s\n", decrypted);*/
+  encrypt(decrypted, encrypted);
+  /*printf("Cipher Text %s\n", encrypted);*/
+  strcat(encrypted, "\n");
+  if(fputs(encrypted,address)==EOF)
   {
     return 0;
   }
@@ -63,14 +64,19 @@ int sendToServer(char *msg, FILE *address)
   }
 
 
-int recvFromServer(char *msg, FILE *address)
+int recvFromServer(char *decrypted, FILE *address)
 {
-  if (fgets( msg, BUFSIZE, address ) !=NULL)
+
+  char encrypted[BUFSIZE];
+
+
+  if (fgets( encrypted, BUFSIZE, address ) !=NULL)
   {
-
-
+    encrypted[strlen(encrypted)-1] = '\0'; 
     // Decrypt data first
-    // decrypt(msg, KEY);
+    /*printf("Cipher Text %s\n", encrypted);*/
+    decrypt(encrypted, decrypted);
+    /*printf("Plain Text %s\n", decrypted);*/
 
     fflush(stdout);
 
@@ -171,7 +177,7 @@ main( int argc, char *argv[] )
       // after the connection gets established I am going to wait for the server to send me the request to authenticate my username and password.
       // The server is going to be the one to initiate the conversation by asking for the username and password from the client
       /*if(fgets(recv_buf,BUFSIZE,server_rep)!=NULL) {*/
-        if (recvFromServer(recv_buf, server_rep) != 0) {
+       if (recvFromServer(recv_buf, server_rep) != 0) {
 
         fprintf(stdout,"Server: %s", recv_buf);
         if(strcmp(recv_buf,good)==0){
@@ -219,46 +225,54 @@ main( int argc, char *argv[] )
       }
 
       // Sent the server_req to the server
-      /*fflush( server_req );   buffering everywhere.... */
+      fflush( server_req );   /*buffering everywhere.... */
 
 
 
     // Ameya's Code - Not sure of working.
     // The code below breaks a lot of functionality right now. 
     // Needs  to verify and check. 
+    // printf("here\n");
     int finished_reading = 0, len;
       while(1)
       {
         finished_reading;
-        len =0;
+              len =0;
         //         sleep(2);
         ioctl(sockfd, FIONREAD, &len);
         if (len > 0) 
         {
           //printf("%d\n", len);
           len = read(sockfd, recv_buf, len);
-          fprintf(stdout, recv_buf);
-          fflush(stdout);
-          memset(recv_buf,'\0',strlen(recv_buf));
+          char decrypted[BUFSIZE];
+          /*fprintf(stdout, recv_buf);*/
+          recv_buf[strlen(recv_buf)-1] = '\0'; 
+          decrypt(recv_buf,decrypted);
+          fprintf(stdout, decrypted);
+          /*fflush(stdout);*/
+          memset(recv_buf,0,strlen(recv_buf));
           finished_reading = 1;
         }
         if((len == 0) && (finished_reading == 1))
-    break;
+    		break;
       }
 
       // Shan's Code commented out by Ameya.
       // Get the server reply and put into recv_buf
       /*if( fgets( recv_buf, BUFSIZE, server_rep ) == NULL )*/
-  /*if( recvFromServer( recv_buf, server_rep ) == 0 )
+/*
+  if( recvFromServer( recv_buf, server_rep ) == 0 )
       {
         perror( "read failure from associative memory at server");
       }
       // print whatever the server sends to the stdout
       fprintf(stdout,"Server: %s",recv_buf);
-
+      fflush(stdout);
+*/
       // If the server sends exiting, you better exit as well.
+
       if(strcmp(recv_buf,"Exiting\n")==0)
-        break;*/
+        break;
   }
 
   /* shut things down */

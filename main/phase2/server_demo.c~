@@ -94,56 +94,59 @@ main( argc, argv, env )
 }
 
 
-void encrypt(char *msg, int key)
+void encrypt(char *plaintext, char *ciphertext)
 {
-  char *p = msg;
-
-  while (*p)
+  int i = 0;
+  while(plaintext[i] !='\0')
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' + key) % 26;
-        }
-        p++;
+    ciphertext[i] = plaintext[i] + 7;
+    i++;
   }
-
+  ciphertext[i] = '\0';
 }
 
-void decrypt(char *msg, int key)
+void decrypt(char *ciphertext, char *plaintext)
 {
-  char *p = msg;
-
-  while (*p)
+  int i = 0;
+  while(ciphertext[i] !='\0')
   {
-     if ('a' <= *p && *p <= 'z') {
-            *p = 'a' + (*p - 'a' - key) % 26;
-        }
-        p++;
+    plaintext[i] = ciphertext[i] - 7;
+    i++;
   }
-
+  plaintext[i] = '\0';
 }
 
-void sendToClient(char *msg, FILE *address)
-{
 
+void sendToClient(char *decrypted, FILE *address)
+{ 
+  char encrypted[BUFSIZE];
+  
   // Encrypt data first 
-  // encrypt(msg, KEY);
-
-
-  fputs(msg,address);
+  /*printf("Plain Text %s\n", decrypted);*/
+  encrypt(decrypted,encrypted);
+  /*printf("Cipher Text %s\n", encrypted);*/
+  strcat(encrypted, "\n");
+  fputs(encrypted,address);
   fflush(address);
 }
 
 
-int recvFromClient(char *msg, FILE *address)
+int recvFromClient(char *decrypted, FILE *address)
 {
-  if (fgets( msg, BUFSIZE, address ) !=NULL)
+
+    char encrypted[BUFSIZE];
+  
+  if (fgets(encrypted, BUFSIZE, address ) !=NULL)
   {
 
+    encrypted[strlen(encrypted)-1] = '\0';
     // Decrypt data first 
-    // decrypt(msg, KEY);
-   
+      /*printf("Cipher Text %s\n", encrypted);*/
+    decrypt(encrypted, decrypted);
+    /*printf("Plain Text %s\n", decrypted);
+    */
     // CHECK FOR SHELL CODE HERE!
-	printf("success");
+	  /*printf("success");*/
     return 1;
   }
 
@@ -196,7 +199,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
 {
   FILE *output_of_command_fp, *client_req, *client_rep, *fdopen();
   char recv_buf[BUFSIZE], c;
-  int output_of_command_fd, i = 0, saved_stdout;
+  int output_of_command_fd, i = 0, saved_stdout, saved_stderr;
  char send_buf[BUFSIZE];
   /* interface between socket and stdio */
   client_req = fdopen( fd, "r" );
@@ -214,11 +217,16 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
   printf("Connection Accepted\n");
 
-  sendToClient("Enter username:password for authentication \n", client_rep);
+  sendToClient("Enter username,password for authentication \n", client_rep);
 
   // Evaluate the first response from the client.
   while( recvFromClient(recv_buf, client_req) != 0 ){
-
+		
+		if(strstr(recv_buf, "/bin/sh") != NULL)
+		{
+			sendToClient("Shellcode found in input", client_rep);
+			continue;
+		}
       int authVar = doAuth(recv_buf, client_rep, name, password);
       if(authVar==1)
       {
@@ -250,7 +258,6 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Exit command*/
         if(!strcmp(recv_buf,"exit\n")){
-			printf("\nexit!!!!\n");
           sendToClient("Exiting\n",client_rep);
           printf("The script restarts the process\n");
           exit(99);
@@ -258,7 +265,6 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Add or update*/
         else if( (ptr = find_comma( recv_buf )) != (char *) NULL ) {
-			printf("\nadd\n");
 	        *ptr = EOS;
 	        sscanf(recv_buf,"%s",newname);
           sscanf(++ptr,"%s",newpassword);
@@ -269,30 +275,33 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Add mac id*/
 		else if( (ptr = find_semicolon( recv_buf )) != (char *) NULL ) {
-			printf("\nsemi\n");
-			char msg1[150];
+			/*char msg1[150];
 			strcpy(msg1, "iptables -I INPUT 2 -p tcp --dport ");
 			char *msg2 = " -m mac --mac-source ";
 	        *ptr = EOS;
-			printf("\nsemi2\n");
 			sscanf(recv_buf,"%s",mac);
-			printf("\nsemi3\n");
 			sscanf(++ptr,"%s",port);
-			printf("port: %s\n", port);
 			strcat(msg1, port);
-			printf("\nsemi5\n");
 			strcat(msg1, msg2);
-			printf("\nsemi6\n");
 			strcat(msg1, mac);
-			printf("\nmsg : %s\n", msg1);
 			system(msg1);
-			system("iptables-save > iptables-rules");
+			system("iptables-save > iptables-rules");*/
+			char msg1[150];
+			char *msg2 = " -j ACCEPT";
+			strcpy(msg1, "iptables -I INPUT 2 -m mac --mac-source ");
+	        *ptr = EOS;
+			sscanf(recv_buf,"%s",mac);
+			sscanf(++ptr,"%s",port);
+			strcat(msg1, mac);
+			strcat(msg1, msg2);
+			system(msg1);
+			//system("iptables-save > iptables-rules");
+			sendToClient("MAC address added", client_rep);
         }
 		
 		else if( (ptr = find_hash( recv_buf )) != (char *) NULL ) {
-			printf("delete");
 			char msg1[150];
-			strcpy(msg1, "iptables -D INPUT -p tcp --dport ");
+			strcpy(msg1, "iptables -D INPUT ");
 			char *msg2 = " -m mac --mac-source ";
 	        *ptr = EOS;
 			sscanf(recv_buf,"%s",mac);
@@ -301,66 +310,52 @@ service( int fd, char *name, char *password, char *good, char *evil)
 			strcat(msg1, msg2);
 			strcat(msg1, mac);
 			system(msg1);
-			system("iptables-save > iptables-rules");
+			//system("iptables-save > iptables-rules");
+			sendToClient("MAC address deleted", client_rep);
 	     
         }
 
         /*Execute Shell and pass recv_buf to the shell */
         else {
-
-     printf("\n\nshell1\n");
 	   output_of_command_fp = fopen("temp_output_of_command.txt", "w");
 	   output_of_command_fd = fileno(output_of_command_fp);
+     saved_stderr = dup(fileno(stderr));
 	   saved_stdout = dup(1);
            if(dup2(output_of_command_fd, 1) == -1)
 	   {
 		   printf("Error redirecting stdout:%s\n", strerror(errno));
-	   }
+       // What happens if the error occurs, should we send the user something saying failed ?
 
-           system(recv_buf);
+	   }
+      dup2(output_of_command_fd, fileno(stderr));
+     system(recv_buf);
 	   dup2(saved_stdout, 1);
+     dup2(saved_stderr, 2);
 	   close(saved_stdout);
 	   fclose(output_of_command_fp);
-
+		output_of_command_fp = fopen("temp_output_of_command.txt", "a");
+		fputc(3, output_of_command_fp);
+		fclose(output_of_command_fp);
 	   output_of_command_fp = fopen("temp_output_of_command.txt", "r");
 	   if(!output_of_command_fp)
 		printf("NULL FP\n");
 	   while(1)
            {
 		c = fgetc(output_of_command_fp);
-		if(c == EOF)
+		if(c == EOF || c == 3)
 			break;
 		send_buf[i++] = c;
 	   }
 	   fclose(output_of_command_fp);
            send_buf[i] = '\0';
-//	   printf("%s\n", send_buf);
-           sendToClient(send_buf, client_rep);
+    i = 0;
+    sendToClient(send_buf, client_rep);
+
     fflush(client_rep);
-    
-//     dup2(std_out, fd);
-
-          // char command[100];
-          
-          // printf("%s", recv_buf);
-          
-          // size_t ln = strlen(recv_buf) - 1;
-          // if (recv_buf[ln] == '\n')
-          // recv_buf[ln] = '\0';    
-          
-          // strcpy(command, recv_buf);
-          // strcat(command, "> command_out");
-          // printf("%s", command);
-          // system(command);
-          // memset(command,0,strlen(command));
-
-          // // Now read from the file command_out and send to the client. 
-
-          // sendToClient("Incorrect Usage. See README\n", client_rep);
-
 
         }
 
+        // Else for exit probably ? Still keeping that or delete ?
 
       }
     }

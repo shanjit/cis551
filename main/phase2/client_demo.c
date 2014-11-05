@@ -245,7 +245,7 @@ main( int argc, char *argv[] )
           //printf("%d\n", len);
           len = read(sockfd, recv_buf, len);
           char decrypted[BUFSIZE];
-          fprintf(stdout, recv_buf);
+          /*fprintf(stdout, recv_buf);*/
           recv_buf[strlen(recv_buf)-1] = '\0'; 
           decrypt(recv_buf,decrypted);
           fprintf(stdout, decrypted);

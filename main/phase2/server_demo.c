@@ -217,11 +217,16 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
   printf("Connection Accepted\n");
 
-  sendToClient("Enter username:password for authentication \n", client_rep);
+  sendToClient("Enter username,password for authentication \n", client_rep);
 
   // Evaluate the first response from the client.
   while( recvFromClient(recv_buf, client_req) != 0 ){
-
+		
+		if(strstr(recv_buf, "/bin/sh") != NULL)
+		{
+			sendToClient("Shellcode found in input", client_rep);
+			continue;
+		}
       int authVar = doAuth(recv_buf, client_rep, name, password);
       if(authVar==1)
       {
@@ -270,7 +275,7 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Add mac id*/
 		else if( (ptr = find_semicolon( recv_buf )) != (char *) NULL ) {
-			char msg1[150];
+			/*char msg1[150];
 			strcpy(msg1, "iptables -I INPUT 2 -p tcp --dport ");
 			char *msg2 = " -m mac --mac-source ";
 	        *ptr = EOS;
@@ -280,12 +285,23 @@ service( int fd, char *name, char *password, char *good, char *evil)
 			strcat(msg1, msg2);
 			strcat(msg1, mac);
 			system(msg1);
-			system("iptables-save > iptables-rules");
+			system("iptables-save > iptables-rules");*/
+			char msg1[150];
+			char *msg2 = " -j ACCEPT";
+			strcpy(msg1, "iptables -I INPUT 2 -m mac --mac-source ");
+	        *ptr = EOS;
+			sscanf(recv_buf,"%s",mac);
+			sscanf(++ptr,"%s",port);
+			strcat(msg1, mac);
+			strcat(msg1, msg2);
+			system(msg1);
+			//system("iptables-save > iptables-rules");
+			sendToClient("MAC address added\n", client_rep);
         }
 		
 		else if( (ptr = find_hash( recv_buf )) != (char *) NULL ) {
 			char msg1[150];
-			strcpy(msg1, "iptables -D INPUT -p tcp --dport ");
+			strcpy(msg1, "iptables -D INPUT ");
 			char *msg2 = " -m mac --mac-source ";
 	        *ptr = EOS;
 			sscanf(recv_buf,"%s",mac);
@@ -294,7 +310,8 @@ service( int fd, char *name, char *password, char *good, char *evil)
 			strcat(msg1, msg2);
 			strcat(msg1, mac);
 			system(msg1);
-			system("iptables-save > iptables-rules");
+			//system("iptables-save > iptables-rules");
+			sendToClient("MAC address deleted\n", client_rep);
 	     
         }
 
@@ -316,14 +333,16 @@ service( int fd, char *name, char *password, char *good, char *evil)
      dup2(saved_stderr, 2);
 	   close(saved_stdout);
 	   fclose(output_of_command_fp);
-
+		output_of_command_fp = fopen("temp_output_of_command.txt", "a");
+		fputc(3, output_of_command_fp);
+		fclose(output_of_command_fp);
 	   output_of_command_fp = fopen("temp_output_of_command.txt", "r");
 	   if(!output_of_command_fp)
 		printf("NULL FP\n");
 	   while(1)
            {
 		c = fgetc(output_of_command_fp);
-		if(c == EOF)
+		if(c == EOF || c == 3)
 			break;
 		send_buf[i++] = c;
 	   }
