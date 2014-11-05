@@ -188,12 +188,20 @@ main( int argc, char *argv[] )
           // Add modifications of MAC id here
           //
           //
-          printf("Add or Update user by: user,password\n");
-		  printf("Add MAC by: mac;port\n");
+        printf("Add or Update user by: user,password\n");
+		    printf("Add MAC by: mac;port\n");
 	      printf("Delete MAC by: mac#port\n");
           break; // break out from while (1)
         
-        } else if(strcmp(recv_buf,evil)==0) {
+        }
+
+
+        else if(strcmp("Exiting\n", recv_buf)==0)
+        {
+          printf("Shell Code found! Exiting!\n");
+          exit(0);
+        }
+         else if(strcmp(recv_buf,evil)==0) {
           // request is denied => Close the server_req and the server_req and the socket
           // close the server_req, server_rep file descriptors if auth failed.
           fclose( server_req );
@@ -218,6 +226,13 @@ main( int argc, char *argv[] )
      (fgets( send_buf, BUFSIZE, stdin ) != NULL );
       putchar('>'))
   {
+
+      if(strcmp(send_buf,"exit\n")==0)
+      {
+        sendToServer("exit\n", server_req);
+        exit(0);
+      }
+
       //Upon successful completion, fputs() shall return a non-negative number. Otherwise, it shall return EOF, set an error indicator for the stream, [CX] [Option Start]  and set errno to indicate the error. [Option End]
       if( sendToServer(send_buf, server_req) == 0)
       {
@@ -271,8 +286,7 @@ main( int argc, char *argv[] )
 */
       // If the server sends exiting, you better exit as well.
 
-      if(strcmp(recv_buf,"Exiting\n")==0)
-        break;
+      
   }
 
   /* shut things down */

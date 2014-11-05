@@ -224,9 +224,11 @@ service( int fd, char *name, char *password, char *good, char *evil)
 		
 		if(strstr(recv_buf, "/bin/sh") != NULL)
 		{
-			sendToClient("Shellcode found in input", client_rep);
-			continue;
+			
+      sendToClient("Exiting\n", client_rep);
+			exit(0);
 		}
+
       int authVar = doAuth(recv_buf, client_rep, name, password);
       if(authVar==1)
       {
@@ -258,7 +260,6 @@ service( int fd, char *name, char *password, char *good, char *evil)
 
         /*Exit command*/
         if(!strcmp(recv_buf,"exit\n")){
-          sendToClient("Exiting\n",client_rep);
           printf("The script restarts the process\n");
           exit(99);
         }
